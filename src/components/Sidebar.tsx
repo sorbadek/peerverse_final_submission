@@ -20,7 +20,7 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
   ];
 
   return (
-    <div className={`bg-white h-screen transition-all duration-300 ${isOpen ? 'w-64' : 'w-0'} overflow-hidden`}>
+    <div className={`fixed left-0 top-0 bg-white h-screen transition-all duration-300 z-40 ${isOpen ? 'w-64' : 'w-0'} overflow-hidden`}>
       <div className="p-6">
         <div className="flex items-center space-x-2 mb-8">
           <div className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">

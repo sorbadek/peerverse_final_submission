@@ -14,7 +14,7 @@ const Index = () => {
     <div className="min-h-screen bg-black flex w-full">
       <Sidebar isOpen={sidebarOpen} />
       
-      <div className="flex-1 flex flex-col">
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'}`}>
         <Header onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
         
         <main className="flex-1 p-6 overflow-auto">
