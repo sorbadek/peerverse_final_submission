@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Search, Filter, SortAsc, Grid, List, FileText, Video, Image, Code, Music, Archive, File, Download, Share2, Eye, Calendar, Folder, Star, Bookmark } from 'lucide-react';
+import { Search, Filter, SortAsc, Grid, List, FileText, Video, Image, Code, Music, Archive, File, Share2, Eye, Calendar, Folder, Star, Bookmark } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const VaultContent = () => {
@@ -297,9 +296,6 @@ const VaultContent = () => {
                     Open
                   </Button>
                   <Button size="sm" variant="outline">
-                    <Download className="w-3 h-3" />
-                  </Button>
-                  <Button size="sm" variant="outline">
                     <Share2 className="w-3 h-3" />
                   </Button>
                 </div>
@@ -338,9 +334,6 @@ const VaultContent = () => {
                     <div className="flex space-x-1">
                       <Button size="sm" variant="outline">
                         <Eye className="w-4 h-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Download className="w-4 h-4" />
                       </Button>
                       <Button size="sm" variant="outline">
                         <Share2 className="w-4 h-4" />
