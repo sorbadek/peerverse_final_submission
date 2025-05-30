@@ -6,17 +6,35 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import LearningResourceCard from './LearningResourceCard';
 
+interface LearningResource {
+  id: number;
+  title: string;
+  description: string;
+  type: 'video' | 'pdf' | 'file';
+  category: string;
+  level: string;
+  duration?: string;
+  pages?: number;
+  fileCount?: number;
+  fileSize: string;
+  thumbnail: string;
+  author: string;
+  rating: number;
+  enrolled?: number;
+  downloaded?: number;
+}
+
 const LearnContent = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLevel, setSelectedLevel] = useState('all');
 
-  const learningResources = [
+  const learningResources: LearningResource[] = [
     {
       id: 1,
       title: "Advanced React Patterns and Best Practices",
       description: "Learn advanced React patterns including hooks, context, and performance optimization techniques.",
-      type: "video",
+      type: "video" as const,
       category: "Frontend",
       level: "Advanced",
       duration: "2h 45m",
@@ -30,7 +48,7 @@ const LearnContent = () => {
       id: 2,
       title: "Complete JavaScript Guide",
       description: "Comprehensive guide covering ES6+, async programming, and modern JavaScript development.",
-      type: "pdf",
+      type: "pdf" as const,
       category: "Frontend",
       level: "Intermediate",
       pages: 340,
@@ -44,7 +62,7 @@ const LearnContent = () => {
       id: 3,
       title: "UI/UX Design Fundamentals",
       description: "Master the principles of user interface and user experience design with practical examples.",
-      type: "video",
+      type: "video" as const,
       category: "Design",
       level: "Beginner",
       duration: "3h 20m",
@@ -58,7 +76,7 @@ const LearnContent = () => {
       id: 4,
       title: "Backend Development with Node.js",
       description: "Build scalable backend applications using Node.js, Express, and MongoDB.",
-      type: "video",
+      type: "video" as const,
       category: "Backend",
       level: "Intermediate",
       duration: "4h 15m",
@@ -72,7 +90,7 @@ const LearnContent = () => {
       id: 5,
       title: "Data Structures and Algorithms Handbook",
       description: "Essential data structures and algorithms every programmer should know.",
-      type: "pdf",
+      type: "pdf" as const,
       category: "Computer Science",
       level: "Advanced",
       pages: 420,
@@ -86,7 +104,7 @@ const LearnContent = () => {
       id: 6,
       title: "Mobile App Development Resources",
       description: "Collection of tools, templates, and assets for mobile app development.",
-      type: "file",
+      type: "file" as const,
       category: "Mobile",
       level: "Intermediate",
       fileCount: 45,
