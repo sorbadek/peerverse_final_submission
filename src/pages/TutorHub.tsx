@@ -3,9 +3,24 @@ import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import TutorHubContent from '../components/TutorHubContent';
+import { SessionProvider, useSession } from '../components/SessionManager';
+import JitsiMeet from '../components/JitsiMeet';
 
-const TutorHub = () => {
+const TutorHubInner = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { currentSession, endSession } = useSession();
+
+  // If there's an active session, show Jitsi Meet
+  if (currentSession) {
+    return (
+      <JitsiMeet
+        roomName={currentSession.roomName}
+        displayName="User" // In a real app, this would come from user context
+        onClose={endSession}
+        isHost={currentSession.isHost}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-black flex w-full">
@@ -29,6 +44,14 @@ const TutorHub = () => {
         </main>
       </div>
     </div>
+  );
+};
+
+const TutorHub = () => {
+  return (
+    <SessionProvider>
+      <TutorHubInner />
+    </SessionProvider>
   );
 };
 

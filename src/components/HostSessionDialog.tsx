@@ -13,6 +13,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
 import { Video, Users, Clock, Award } from 'lucide-react';
+import { useSession } from './SessionManager';
+import { toast } from '@/hooks/use-toast';
 
 interface HostSessionDialogProps {
   open: boolean;
@@ -20,6 +22,7 @@ interface HostSessionDialogProps {
 }
 
 const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
+  const { startSession } = useSession();
   const [sessionData, setSessionData] = useState({
     title: '',
     description: '',
@@ -32,13 +35,47 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
   const categories = ['Frontend', 'Backend', 'Design', 'Computer Science', 'Mobile', 'DevOps'];
   const durations = ['30 min', '45 min', '60 min', '90 min', '120 min'];
 
+  const generateRoomName = (title: string) => {
+    // Create a unique room name based on title and timestamp
+    const sanitizedTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const timestamp = Date.now();
+    return `tutorHub_${sanitizedTitle}_${timestamp}`;
+  };
+
   const handleCreateSession = () => {
-    // In a real implementation, this would create the session and initialize Jitsi
-    console.log('Creating session:', sessionData);
-    // You would integrate with Jitsi Meet API here to create a room
-    onOpenChange(false);
+    if (!isFormValid) return;
+
+    const roomName = generateRoomName(sessionData.title);
     
-    // Reset form
+    // Create session object
+    const session = {
+      id: `session_${Date.now()}`,
+      roomName: roomName,
+      title: sessionData.title,
+      isHost: true
+    };
+
+    // Save session data to localStorage for persistence
+    const sessionInfo = {
+      ...sessionData,
+      roomName,
+      createdAt: new Date().toISOString(),
+      isActive: true
+    };
+    
+    localStorage.setItem(`session_${session.id}`, JSON.stringify(sessionInfo));
+
+    // Start the Jitsi session
+    startSession(session);
+    
+    // Show success toast
+    toast({
+      title: "Session Started!",
+      description: `Your live session "${sessionData.title}" is now active.`,
+    });
+
+    // Close dialog and reset form
+    onOpenChange(false);
     setSessionData({
       title: '',
       description: '',
@@ -177,7 +214,7 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
             disabled={!isFormValid}
             className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
           >
-            Start Session
+            Start Live Session
           </Button>
         </div>
       </DialogContent>

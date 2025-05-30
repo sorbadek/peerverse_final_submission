@@ -2,6 +2,8 @@
 import React from 'react';
 import { Users, Clock, Star, Play, Award } from 'lucide-react';
 import { Button } from './ui/button';
+import { useSession } from './SessionManager';
+import { toast } from '@/hooks/use-toast';
 
 interface OngoingSession {
   id: string;
@@ -20,10 +22,34 @@ interface OngoingSessionCardProps {
 }
 
 const OngoingSessionCard = ({ session }: OngoingSessionCardProps) => {
+  const { startSession } = useSession();
+
+  const generateRoomName = (sessionId: string) => {
+    // Generate consistent room name for the session
+    return `tutorHub_session_${sessionId}`;
+  };
+
   const handleJoinSession = () => {
-    // In a real implementation, this would open the Jitsi meet room
-    console.log(`Joining session: ${session.id}`);
-    // You would integrate with Jitsi Meet API here
+    const roomName = generateRoomName(session.id);
+    
+    // Create session object for joining
+    const joinSession = {
+      id: session.id,
+      roomName: roomName,
+      title: session.title,
+      isHost: false
+    };
+
+    // Start the Jitsi session as participant
+    startSession(joinSession);
+    
+    // Show joining toast
+    toast({
+      title: "Joining Session",
+      description: `Joining "${session.title}" hosted by ${session.host}`,
+    });
+
+    console.log(`Joining session: ${session.id} in room: ${roomName}`);
   };
 
   return (
