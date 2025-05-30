@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { Home, BookOpen, Users, MessageSquare, BarChart, Download, Settings, Trash2, LogOut, X } from 'lucide-react';
+import { Home, BookOpen, Users, MessageSquare, ShoppingBag, Vault, User, Settings, Trash2, LogOut, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
 interface SidebarProps {
@@ -17,8 +16,9 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
     { icon: BookOpen, label: 'Learn', path: '/learn' },
     { icon: Users, label: 'Tutor Hub', path: '/tutor-hub' },
     { icon: MessageSquare, label: 'Community', path: '/community' },
-    { icon: BarChart, label: 'Grades', path: '/grades' },
-    { icon: Download, label: 'Downloads', path: '/downloads' },
+    { icon: ShoppingBag, label: 'Marketplace', path: '/marketplace' },
+    { icon: Vault, label: 'Vault', path: '/vault' },
+    { icon: User, label: 'Public Profile', path: '/public-profile' },
     { icon: Settings, label: 'Settings', path: '/settings' },
     { icon: Trash2, label: 'Trash', path: '/trash' },
     { icon: LogOut, label: 'Log Out', path: '/logout' },

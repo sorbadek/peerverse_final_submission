@@ -8,6 +8,8 @@ import { useState } from "react";
 import Index from "./pages/Index";
 import Learn from "./pages/Learn";
 import TutorHub from "./pages/TutorHub";
+import Marketplace from "./pages/Marketplace";
+import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
@@ -23,6 +25,8 @@ const App = () => {
             <Route path="/" element={<Index />} />
             <Route path="/learn" element={<Learn />} />
             <Route path="/tutor-hub" element={<TutorHub />} />
+            <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/public-profile" element={<PublicProfile />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
