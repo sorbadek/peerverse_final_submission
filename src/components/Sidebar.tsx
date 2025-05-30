@@ -23,10 +23,11 @@ const Sidebar = ({ isOpen }: SidebarProps) => {
     <div className={`fixed left-0 top-0 bg-white h-screen transition-all duration-300 z-40 ${isOpen ? 'w-64' : 'w-0'} overflow-hidden`}>
       <div className="p-6">
         <div className="flex items-center space-x-2 mb-8">
-          <div className="w-8 h-8 bg-gradient-to-r from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">🌐</span>
-          </div>
-          <span className="text-xl font-bold text-gray-800">PeerVerse</span>
+          <img 
+            src="/lovable-uploads/f60d0cca-0f77-48f5-8700-a54fdfd0c187.png" 
+            alt="PeerVerse Logo" 
+            className="h-8 w-auto"
+          />
         </div>
         
         <nav className="space-y-2">
