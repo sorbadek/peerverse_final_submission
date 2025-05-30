@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Star, Upload, FileText, Users, Award, Eye, Share2, Filter, Search, TrendingUp, Clock, Bookmark, Heart, MessageSquare, Shield, Zap, Trophy, File, Video, Image, Music, Archive, Code, Coins, Clock3, Calendar, MapPin } from 'lucide-react';
+import { Star, Upload, FileText, Users, Award, Eye, Share2, Filter, Search, TrendingUp, Clock, Bookmark, Heart, MessageSquare, Shield, Zap, Trophy, File, Video, Image, Music, Archive, Code, Clock3, Calendar, MapPin } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const MarketplaceContent = () => {
@@ -58,7 +58,6 @@ const MarketplaceContent = () => {
       comments: 23,
       verificationLevel: 'expert',
       trustScore: 94,
-      xpRequired: 150,
       tags: ['React', 'JavaScript', 'Frontend']
     },
     {
@@ -75,7 +74,6 @@ const MarketplaceContent = () => {
       comments: 45,
       verificationLevel: 'expert',
       trustScore: 98,
-      xpRequired: 250,
       tags: ['ML', 'Research', 'AI']
     },
     {
@@ -92,7 +90,6 @@ const MarketplaceContent = () => {
       comments: 12,
       verificationLevel: 'verified',
       trustScore: 87,
-      xpRequired: 100,
       tags: ['Figma', 'Design', 'UI/UX']
     },
     {
@@ -109,7 +106,6 @@ const MarketplaceContent = () => {
       comments: 89,
       verificationLevel: 'verified',
       trustScore: 91,
-      xpRequired: 200,
       tags: ['Python', 'Data Science', 'Analytics']
     },
     {
@@ -126,7 +122,6 @@ const MarketplaceContent = () => {
       comments: 34,
       verificationLevel: 'verified',
       trustScore: 88,
-      xpRequired: 75,
       tags: ['Business', 'Templates', 'Planning']
     },
     {
@@ -143,7 +138,6 @@ const MarketplaceContent = () => {
       comments: 156,
       verificationLevel: 'expert',
       trustScore: 95,
-      xpRequired: 300,
       tags: ['HTML', 'CSS', 'JavaScript']
     },
     {
@@ -160,7 +154,6 @@ const MarketplaceContent = () => {
       comments: 78,
       verificationLevel: 'expert',
       trustScore: 92,
-      xpRequired: 125,
       tags: ['Statistics', 'Math', 'Analysis']
     },
     {
@@ -177,7 +170,6 @@ const MarketplaceContent = () => {
       comments: 45,
       verificationLevel: 'verified',
       trustScore: 89,
-      xpRequired: 175,
       tags: ['Mobile', 'Design', 'UI Kit']
     },
     {
@@ -194,7 +186,6 @@ const MarketplaceContent = () => {
       comments: 23,
       verificationLevel: 'verified',
       trustScore: 86,
-      xpRequired: 90,
       tags: ['Physics', 'Lab', 'Experiments']
     },
     {
@@ -211,7 +202,6 @@ const MarketplaceContent = () => {
       comments: 67,
       verificationLevel: 'verified',
       trustScore: 90,
-      xpRequired: 220,
       tags: ['Marketing', 'Digital', 'Strategy']
     },
     {
@@ -228,7 +218,6 @@ const MarketplaceContent = () => {
       comments: 56,
       verificationLevel: 'verified',
       trustScore: 87,
-      xpRequired: 110,
       tags: ['JavaScript', 'Code', 'Library']
     },
     {
@@ -245,7 +234,6 @@ const MarketplaceContent = () => {
       comments: 34,
       verificationLevel: 'expert',
       trustScore: 93,
-      xpRequired: 80,
       tags: ['Calculus', 'Math', 'Study Guide']
     }
   ];
@@ -431,7 +419,7 @@ const MarketplaceContent = () => {
         </button>
       </div>
 
-      {/* Materials Tab - Updated with smaller cards and more in grid */}
+      {/* Materials Tab - Removed XP display */}
       {activeTab === 'materials' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredMaterials.map((material) => (
@@ -498,11 +486,7 @@ const MarketplaceContent = () => {
                   )}
                 </div>
 
-                <div className="flex items-center justify-between pt-2 border-t border-gray-700">
-                  <div className="flex items-center space-x-1">
-                    <Coins className="w-3 h-3 text-yellow-500" />
-                    <span className="text-yellow-400 font-bold text-sm">{material.xpRequired} XP</span>
-                  </div>
+                <div className="flex justify-center pt-2 border-t border-gray-700">
                   <Button size="sm" variant="outline" className="text-xs">
                     <Share2 className="w-3 h-3 mr-1" />
                     Access
@@ -514,7 +498,7 @@ const MarketplaceContent = () => {
         </div>
       )}
 
-      {/* Enhanced Talents Tab */}
+      {/* Enhanced Talents Tab - Keep existing */}
       {activeTab === 'talents' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {talents.map((talent) => (
@@ -594,7 +578,6 @@ const MarketplaceContent = () => {
 
                 <div className="flex items-center justify-between text-sm">
                   <div className="flex items-center space-x-1">
-                    <Coins className="w-4 h-4 text-yellow-500" />
                     <span className="text-yellow-400 font-medium">${talent.hourlyRate}/hr</span>
                   </div>
                   <span className={talent.availability === 'Available' ? 'text-green-400' : 'text-orange-400'}>
