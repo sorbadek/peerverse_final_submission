@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Star, Upload, FileText, Users, Award, Eye, Share2, Filter, Search, TrendingUp, Clock, Bookmark, Heart, MessageSquare, Shield, Zap, Trophy, File, Video, Image, Music, Archive, Code } from 'lucide-react';
+import { Star, Upload, FileText, Users, Award, Eye, Share2, Filter, Search, TrendingUp, Clock, Bookmark, Heart, MessageSquare, Shield, Zap, Trophy, File, Video, Image, Music, Archive, Code, Coins, Clock3, Calendar, MapPin } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const MarketplaceContent = () => {
@@ -58,7 +58,7 @@ const MarketplaceContent = () => {
       comments: 23,
       verificationLevel: 'expert',
       trustScore: 94,
-      price: '$29.99',
+      xpRequired: 150,
       tags: ['React', 'JavaScript', 'Frontend']
     },
     {
@@ -75,7 +75,7 @@ const MarketplaceContent = () => {
       comments: 45,
       verificationLevel: 'expert',
       trustScore: 98,
-      price: '$49.99',
+      xpRequired: 250,
       tags: ['ML', 'Research', 'AI']
     },
     {
@@ -92,7 +92,7 @@ const MarketplaceContent = () => {
       comments: 12,
       verificationLevel: 'verified',
       trustScore: 87,
-      price: '$19.99',
+      xpRequired: 100,
       tags: ['Figma', 'Design', 'UI/UX']
     },
     {
@@ -109,7 +109,7 @@ const MarketplaceContent = () => {
       comments: 89,
       verificationLevel: 'verified',
       trustScore: 91,
-      price: '$39.99',
+      xpRequired: 200,
       tags: ['Python', 'Data Science', 'Analytics']
     },
     {
@@ -126,7 +126,7 @@ const MarketplaceContent = () => {
       comments: 34,
       verificationLevel: 'verified',
       trustScore: 88,
-      price: '$14.99',
+      xpRequired: 75,
       tags: ['Business', 'Templates', 'Planning']
     },
     {
@@ -143,7 +143,7 @@ const MarketplaceContent = () => {
       comments: 156,
       verificationLevel: 'expert',
       trustScore: 95,
-      price: '$59.99',
+      xpRequired: 300,
       tags: ['HTML', 'CSS', 'JavaScript']
     },
     {
@@ -160,7 +160,7 @@ const MarketplaceContent = () => {
       comments: 78,
       verificationLevel: 'expert',
       trustScore: 92,
-      price: '$24.99',
+      xpRequired: 125,
       tags: ['Statistics', 'Math', 'Analysis']
     },
     {
@@ -177,7 +177,7 @@ const MarketplaceContent = () => {
       comments: 45,
       verificationLevel: 'verified',
       trustScore: 89,
-      price: '$34.99',
+      xpRequired: 175,
       tags: ['Mobile', 'Design', 'UI Kit']
     },
     {
@@ -194,7 +194,7 @@ const MarketplaceContent = () => {
       comments: 23,
       verificationLevel: 'verified',
       trustScore: 86,
-      price: '$18.99',
+      xpRequired: 90,
       tags: ['Physics', 'Lab', 'Experiments']
     },
     {
@@ -211,7 +211,7 @@ const MarketplaceContent = () => {
       comments: 67,
       verificationLevel: 'verified',
       trustScore: 90,
-      price: '$44.99',
+      xpRequired: 220,
       tags: ['Marketing', 'Digital', 'Strategy']
     },
     {
@@ -228,7 +228,7 @@ const MarketplaceContent = () => {
       comments: 56,
       verificationLevel: 'verified',
       trustScore: 87,
-      price: '$22.99',
+      xpRequired: 110,
       tags: ['JavaScript', 'Code', 'Library']
     },
     {
@@ -245,7 +245,7 @@ const MarketplaceContent = () => {
       comments: 34,
       verificationLevel: 'expert',
       trustScore: 93,
-      price: '$16.99',
+      xpRequired: 80,
       tags: ['Calculus', 'Math', 'Study Guide']
     }
   ];
@@ -255,37 +255,85 @@ const MarketplaceContent = () => {
       id: 1,
       name: 'Alex Thompson',
       avatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      title: 'Senior UI/UX Designer',
       skills: ['UI/UX Design', 'Figma', 'Prototyping', 'User Research'],
       rating: 4.9,
-      peers: 234,
       completedProjects: 47,
       responseTime: '< 2 hours',
       verificationLevel: 'expert',
       trustScore: 96,
-      hourlyRate: '$45/hr',
+      hourlyRate: 45,
       availability: 'Available',
       successRate: 98,
       languages: ['English', 'Spanish'],
       timezone: 'EST',
-      portfolio: 15
+      location: 'New York, USA',
+      specialties: ['Mobile App Design', 'Design Systems', 'User Testing'],
+      experience: '5+ years',
+      lastActive: '2 hours ago'
     },
     {
       id: 2,
       name: 'Maria Garcia',
       avatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      title: 'Data Science Specialist',
       skills: ['Data Analysis', 'Python', 'Statistics', 'Machine Learning'],
       rating: 4.7,
-      peers: 156,
       completedProjects: 32,
       responseTime: '< 4 hours',
       verificationLevel: 'verified',
       trustScore: 89,
-      hourlyRate: '$38/hr',
+      hourlyRate: 38,
       availability: 'Busy',
       successRate: 94,
       languages: ['English', 'Portuguese'],
       timezone: 'PST',
-      portfolio: 12
+      location: 'São Paulo, Brazil',
+      specialties: ['Predictive Analytics', 'Data Visualization', 'SQL'],
+      experience: '3+ years',
+      lastActive: '1 day ago'
+    },
+    {
+      id: 3,
+      name: 'James Wilson',
+      avatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      title: 'Full Stack Developer',
+      skills: ['React', 'Node.js', 'TypeScript', 'AWS'],
+      rating: 4.8,
+      completedProjects: 63,
+      responseTime: '< 1 hour',
+      verificationLevel: 'expert',
+      trustScore: 95,
+      hourlyRate: 52,
+      availability: 'Available',
+      successRate: 96,
+      languages: ['English'],
+      timezone: 'GMT',
+      location: 'London, UK',
+      specialties: ['API Development', 'Cloud Architecture', 'DevOps'],
+      experience: '7+ years',
+      lastActive: '30 minutes ago'
+    },
+    {
+      id: 4,
+      name: 'Priya Patel',
+      avatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      title: 'Digital Marketing Expert',
+      skills: ['SEO', 'Content Strategy', 'Social Media', 'Analytics'],
+      rating: 4.6,
+      completedProjects: 28,
+      responseTime: '< 3 hours',
+      verificationLevel: 'verified',
+      trustScore: 91,
+      hourlyRate: 35,
+      availability: 'Available',
+      successRate: 93,
+      languages: ['English', 'Hindi'],
+      timezone: 'IST',
+      location: 'Mumbai, India',
+      specialties: ['Growth Hacking', 'Email Marketing', 'PPC'],
+      experience: '4+ years',
+      lastActive: '1 hour ago'
     }
   ];
 
@@ -315,11 +363,11 @@ const MarketplaceContent = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-white mb-2">Marketplace</h1>
-          <p className="text-gray-400">Discover premium educational content and connect with talented peers</p>
+          <p className="text-gray-400">Share knowledge and connect with talented peers through XP-based contributions</p>
         </div>
         <Button className="bg-blue-600 hover:bg-blue-700">
           <Upload className="w-4 h-4 mr-2" />
-          Upload Material
+          Share Material
         </Button>
       </div>
 
@@ -330,7 +378,7 @@ const MarketplaceContent = () => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Search materials, skills, or users..."
+              placeholder="Search materials, skills, or talents..."
               className="w-full pl-10 pr-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-500"
             />
           </div>
@@ -451,10 +499,13 @@ const MarketplaceContent = () => {
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-gray-700">
-                  <span className="text-green-400 font-bold text-sm">{material.price}</span>
+                  <div className="flex items-center space-x-1">
+                    <Coins className="w-3 h-3 text-yellow-500" />
+                    <span className="text-yellow-400 font-bold text-sm">{material.xpRequired} XP</span>
+                  </div>
                   <Button size="sm" variant="outline" className="text-xs">
                     <Share2 className="w-3 h-3 mr-1" />
-                    Buy
+                    Access
                   </Button>
                 </div>
               </CardContent>
@@ -463,13 +514,13 @@ const MarketplaceContent = () => {
         </div>
       )}
 
-      {/* Talents Tab */}
+      {/* Enhanced Talents Tab */}
       {activeTab === 'talents' && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {talents.map((talent) => (
             <Card key={talent.id} className="bg-gray-800 border-gray-700 hover:border-blue-500 transition-colors cursor-pointer">
               <CardHeader className="pb-4">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-start space-x-3">
                   <div className="relative">
                     <Avatar className="w-16 h-16">
                       <AvatarImage src={talent.avatar} />
@@ -479,11 +530,12 @@ const MarketplaceContent = () => {
                       talent.availability === 'Available' ? 'bg-green-500' : 'bg-orange-500'
                     }`} />
                   </div>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
-                      <h3 className="text-white font-semibold">{talent.name}</h3>
+                      <h3 className="text-white font-semibold truncate">{talent.name}</h3>
                       {getVerificationIcon(talent.verificationLevel)}
                     </div>
+                    <p className="text-gray-400 text-sm mb-2 truncate">{talent.title}</p>
                     <div className="flex items-center space-x-2 mb-2">
                       <div className="flex items-center space-x-1">
                         <Star className="w-4 h-4 text-yellow-500 fill-current" />
@@ -492,11 +544,6 @@ const MarketplaceContent = () => {
                       <span className={`text-sm font-medium ${getTrustScoreColor(talent.trustScore)}`}>
                         {talent.trustScore}%
                       </span>
-                    </div>
-                    <div className="flex items-center space-x-4 text-xs text-gray-400">
-                      <span>{talent.completedProjects} projects</span>
-                      <span>{talent.successRate}% success</span>
-                      <span>{talent.responseTime}</span>
                     </div>
                   </div>
                 </div>
@@ -515,25 +562,44 @@ const MarketplaceContent = () => {
                   )}
                 </div>
                 
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Peers:</span>
-                    <span className="text-gray-300">{talent.peers}</span>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="flex items-center space-x-1">
+                    <MapPin className="w-3 h-3 text-gray-400" />
+                    <span className="text-gray-300 truncate">{talent.location}</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Portfolio:</span>
-                    <span className="text-gray-300">{talent.portfolio} items</span>
+                  <div className="flex items-center space-x-1">
+                    <Clock3 className="w-3 h-3 text-gray-400" />
+                    <span className="text-gray-300">{talent.responseTime}</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Rate:</span>
-                    <span className="text-green-400 font-medium">{talent.hourlyRate}</span>
+                  <div className="flex items-center space-x-1">
+                    <Trophy className="w-3 h-3 text-gray-400" />
+                    <span className="text-gray-300">{talent.completedProjects} projects</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-400">Status:</span>
-                    <span className={talent.availability === 'Available' ? 'text-green-400' : 'text-orange-400'}>
-                      {talent.availability}
-                    </span>
+                  <div className="flex items-center space-x-1">
+                    <Zap className="w-3 h-3 text-gray-400" />
+                    <span className="text-gray-300">{talent.successRate}% success</span>
                   </div>
+                </div>
+
+                <div className="bg-gray-700 p-2 rounded">
+                  <p className="text-xs text-gray-400 mb-1">Specialties:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {talent.specialties.slice(0, 2).map((specialty, index) => (
+                      <Badge key={index} variant="outline" className="text-xs">
+                        {specialty}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center space-x-1">
+                    <Coins className="w-4 h-4 text-yellow-500" />
+                    <span className="text-yellow-400 font-medium">${talent.hourlyRate}/hr</span>
+                  </div>
+                  <span className={talent.availability === 'Available' ? 'text-green-400' : 'text-orange-400'}>
+                    {talent.availability}
+                  </span>
                 </div>
 
                 <div className="flex space-x-2 pt-2">
