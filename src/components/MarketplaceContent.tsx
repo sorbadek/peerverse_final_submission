@@ -1,9 +1,8 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Star, Upload, FileText, Users, Award, Eye, Share2, Filter, Search, TrendingUp, Clock, Bookmark, Heart, MessageSquare, Shield, Zap, Trophy } from 'lucide-react';
+import { Star, Upload, FileText, Users, Award, Eye, Share2, Filter, Search, TrendingUp, Clock, Bookmark, Heart, MessageSquare, Shield, Zap, Trophy, File, Video, Image, Music, Archive, Code } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 const MarketplaceContent = () => {
@@ -19,6 +18,31 @@ const MarketplaceContent = () => {
     { value: 'verified', label: 'Verified First' }
   ];
 
+  const getFileTypeIcon = (type: string) => {
+    switch (type.toLowerCase()) {
+      case 'pdf':
+      case 'pdf collection':
+        return <FileText className="w-5 h-5 text-red-500" />;
+      case 'video':
+      case 'video course':
+        return <Video className="w-5 h-5 text-blue-500" />;
+      case 'figma files':
+      case 'design files':
+        return <Image className="w-5 h-5 text-purple-500" />;
+      case 'code':
+      case 'source code':
+        return <Code className="w-5 h-5 text-green-500" />;
+      case 'audio':
+      case 'podcast':
+        return <Music className="w-5 h-5 text-orange-500" />;
+      case 'archive':
+      case 'zip bundle':
+        return <Archive className="w-5 h-5 text-gray-500" />;
+      default:
+        return <File className="w-5 h-5 text-gray-400" />;
+    }
+  };
+
   const marketplaceMaterials = [
     {
       id: 1,
@@ -32,22 +56,15 @@ const MarketplaceContent = () => {
       bookmarks: 342,
       likes: 89,
       comments: 23,
-      verificationLevel: 'expert', // expert, verified, community
+      verificationLevel: 'expert',
       trustScore: 94,
-      contributionStreak: 45,
-      responseTime: '< 2 hours',
-      lastUpdated: '2 days ago',
-      difficulty: 'Advanced',
-      estimatedTime: '8-12 hours',
-      tags: ['React', 'JavaScript', 'Frontend', 'Hooks', 'Performance'],
-      preview: 'Complete guide covering advanced React patterns including render props, compound components, and custom hooks...',
-      downloads: 892,
-      sharing: 156
+      price: '$29.99',
+      tags: ['React', 'JavaScript', 'Frontend']
     },
     {
       id: 2,
       title: 'Machine Learning Research Papers Collection',
-      type: 'Document Bundle',
+      type: 'PDF',
       category: 'AI/ML',
       author: 'Dr. Michael Rodriguez',
       authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
@@ -58,15 +75,8 @@ const MarketplaceContent = () => {
       comments: 45,
       verificationLevel: 'expert',
       trustScore: 98,
-      contributionStreak: 127,
-      responseTime: '< 1 hour',
-      lastUpdated: '1 week ago',
-      difficulty: 'Expert',
-      estimatedTime: '20+ hours',
-      tags: ['Machine Learning', 'Research', 'AI', 'Deep Learning', 'Neural Networks'],
-      preview: 'Curated collection of 25 breakthrough ML research papers with detailed annotations and implementation guides...',
-      downloads: 1205,
-      sharing: 289
+      price: '$49.99',
+      tags: ['ML', 'Research', 'AI']
     },
     {
       id: 3,
@@ -82,15 +92,161 @@ const MarketplaceContent = () => {
       comments: 12,
       verificationLevel: 'verified',
       trustScore: 87,
-      contributionStreak: 28,
-      responseTime: '< 4 hours',
-      lastUpdated: '5 days ago',
-      difficulty: 'Intermediate',
-      estimatedTime: '4-6 hours',
-      tags: ['Figma', 'Design System', 'UI/UX', 'Templates', 'Components'],
-      preview: 'Professional design system with 100+ components, style guides, and design tokens for modern applications...',
-      downloads: 423,
-      sharing: 92
+      price: '$19.99',
+      tags: ['Figma', 'Design', 'UI/UX']
+    },
+    {
+      id: 4,
+      title: 'Python Data Science Course',
+      type: 'Video Course',
+      category: 'Programming',
+      author: 'Alex Johnson',
+      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      rating: 4.6,
+      views: 2100,
+      bookmarks: 456,
+      likes: 178,
+      comments: 89,
+      verificationLevel: 'verified',
+      trustScore: 91,
+      price: '$39.99',
+      tags: ['Python', 'Data Science', 'Analytics']
+    },
+    {
+      id: 5,
+      title: 'Business Plan Templates',
+      type: 'PDF',
+      category: 'Business',
+      author: 'Maria Garcia',
+      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      rating: 4.5,
+      views: 876,
+      bookmarks: 234,
+      likes: 98,
+      comments: 34,
+      verificationLevel: 'verified',
+      trustScore: 88,
+      price: '$14.99',
+      tags: ['Business', 'Templates', 'Planning']
+    },
+    {
+      id: 6,
+      title: 'Web Development Bootcamp',
+      type: 'Video Course',
+      category: 'Programming',
+      author: 'John Smith',
+      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      rating: 4.8,
+      views: 3200,
+      bookmarks: 687,
+      likes: 298,
+      comments: 156,
+      verificationLevel: 'expert',
+      trustScore: 95,
+      price: '$59.99',
+      tags: ['HTML', 'CSS', 'JavaScript']
+    },
+    {
+      id: 7,
+      title: 'Statistics Handbook',
+      type: 'PDF',
+      category: 'Mathematics',
+      author: 'Dr. Lisa Wang',
+      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      rating: 4.7,
+      views: 1456,
+      bookmarks: 389,
+      likes: 167,
+      comments: 78,
+      verificationLevel: 'expert',
+      trustScore: 92,
+      price: '$24.99',
+      tags: ['Statistics', 'Math', 'Analysis']
+    },
+    {
+      id: 8,
+      title: 'Mobile App Design Kit',
+      type: 'Design Files',
+      category: 'Design',
+      author: 'David Kim',
+      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      rating: 4.6,
+      views: 987,
+      bookmarks: 276,
+      likes: 134,
+      comments: 45,
+      verificationLevel: 'verified',
+      trustScore: 89,
+      price: '$34.99',
+      tags: ['Mobile', 'Design', 'UI Kit']
+    },
+    {
+      id: 9,
+      title: 'Physics Lab Experiments',
+      type: 'PDF Collection',
+      category: 'Science',
+      author: 'Prof. Sarah Miller',
+      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      rating: 4.4,
+      views: 743,
+      bookmarks: 198,
+      likes: 87,
+      comments: 23,
+      verificationLevel: 'verified',
+      trustScore: 86,
+      price: '$18.99',
+      tags: ['Physics', 'Lab', 'Experiments']
+    },
+    {
+      id: 10,
+      title: 'Digital Marketing Masterclass',
+      type: 'Video Course',
+      category: 'Business',
+      author: 'Rachel Brown',
+      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      rating: 4.7,
+      views: 1876,
+      bookmarks: 423,
+      likes: 189,
+      comments: 67,
+      verificationLevel: 'verified',
+      trustScore: 90,
+      price: '$44.99',
+      tags: ['Marketing', 'Digital', 'Strategy']
+    },
+    {
+      id: 11,
+      title: 'JavaScript Source Code Library',
+      type: 'Source Code',
+      category: 'Programming',
+      author: 'Tech Dev',
+      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      rating: 4.5,
+      views: 1234,
+      bookmarks: 345,
+      likes: 123,
+      comments: 56,
+      verificationLevel: 'verified',
+      trustScore: 87,
+      price: '$22.99',
+      tags: ['JavaScript', 'Code', 'Library']
+    },
+    {
+      id: 12,
+      title: 'Calculus Study Guide',
+      type: 'PDF',
+      category: 'Mathematics',
+      author: 'Prof. James Wilson',
+      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      rating: 4.6,
+      views: 892,
+      bookmarks: 267,
+      likes: 98,
+      comments: 34,
+      verificationLevel: 'expert',
+      trustScore: 93,
+      price: '$16.99',
+      tags: ['Calculus', 'Math', 'Study Guide']
     }
   ];
 
@@ -227,100 +383,78 @@ const MarketplaceContent = () => {
         </button>
       </div>
 
-      {/* Materials Tab */}
+      {/* Materials Tab - Updated with smaller cards and more in grid */}
       {activeTab === 'materials' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {filteredMaterials.map((material) => (
             <Card key={material.id} className="bg-gray-800 border-gray-700 hover:border-blue-500 transition-colors cursor-pointer">
-              <CardHeader className="pb-4">
-                <div className="flex items-center justify-between mb-3">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between mb-2">
                   <div className="flex items-center space-x-2">
-                    <Badge variant="secondary" className="bg-blue-600/20 text-blue-400">
+                    {getFileTypeIcon(material.type)}
+                    <Badge variant="secondary" className="bg-blue-600/20 text-blue-400 text-xs">
                       {material.type}
                     </Badge>
-                    <Badge variant="secondary" className="bg-purple-600/20 text-purple-400">
-                      {material.difficulty}
-                    </Badge>
                   </div>
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1">
                     {getVerificationIcon(material.verificationLevel)}
-                    <span className={`text-sm font-medium ${getTrustScoreColor(material.trustScore)}`}>
+                    <span className={`text-xs font-medium ${getTrustScoreColor(material.trustScore)}`}>
                       {material.trustScore}%
                     </span>
                   </div>
                 </div>
-                <CardTitle className="text-white text-lg line-clamp-2 mb-2">
+                <CardTitle className="text-white text-sm line-clamp-2 mb-2">
                   {material.title}
                 </CardTitle>
-                <p className="text-gray-400 text-sm line-clamp-2">{material.preview}</p>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
-                    <Avatar className="w-8 h-8">
+                    <Avatar className="w-6 h-6">
                       <AvatarImage src={material.authorAvatar} />
                       <AvatarFallback>{material.author[0]}</AvatarFallback>
                     </Avatar>
-                    <div>
-                      <span className="text-gray-300 text-sm font-medium">{material.author}</span>
-                      <div className="flex items-center space-x-1">
-                        <Zap className="w-3 h-3 text-orange-400" />
-                        <span className="text-xs text-gray-400">{material.contributionStreak} day streak</span>
-                      </div>
-                    </div>
+                    <span className="text-gray-300 text-xs font-medium">{material.author}</span>
                   </div>
-                  <div className="text-right">
-                    <div className="flex items-center space-x-1">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                      <span className="text-gray-300 text-sm">{material.rating}</span>
-                    </div>
-                    <span className="text-xs text-gray-400">{material.responseTime}</span>
+                  <div className="flex items-center space-x-1">
+                    <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                    <span className="text-gray-300 text-xs">{material.rating}</span>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-4 gap-2 text-xs">
+                <div className="grid grid-cols-3 gap-1 text-xs">
                   <div className="text-center">
-                    <Eye className="w-4 h-4 text-gray-400 mx-auto mb-1" />
+                    <Eye className="w-3 h-3 text-gray-400 mx-auto mb-1" />
                     <span className="text-gray-400">{material.views}</span>
                   </div>
                   <div className="text-center">
-                    <Bookmark className="w-4 h-4 text-blue-400 mx-auto mb-1" />
+                    <Bookmark className="w-3 h-3 text-blue-400 mx-auto mb-1" />
                     <span className="text-gray-400">{material.bookmarks}</span>
                   </div>
                   <div className="text-center">
-                    <Heart className="w-4 h-4 text-red-400 mx-auto mb-1" />
+                    <Heart className="w-3 h-3 text-red-400 mx-auto mb-1" />
                     <span className="text-gray-400">{material.likes}</span>
-                  </div>
-                  <div className="text-center">
-                    <MessageSquare className="w-4 h-4 text-green-400 mx-auto mb-1" />
-                    <span className="text-gray-400">{material.comments}</span>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-1">
-                  {material.tags.slice(0, 4).map((tag, index) => (
+                  {material.tags.slice(0, 2).map((tag, index) => (
                     <Badge key={index} variant="outline" className="text-xs">
                       {tag}
                     </Badge>
                   ))}
-                  {material.tags.length > 4 && (
+                  {material.tags.length > 2 && (
                     <Badge variant="outline" className="text-xs">
-                      +{material.tags.length - 4} more
+                      +{material.tags.length - 2}
                     </Badge>
                   )}
                 </div>
 
                 <div className="flex items-center justify-between pt-2 border-t border-gray-700">
-                  <div className="flex items-center space-x-2 text-xs text-gray-400">
-                    <Clock className="w-3 h-3" />
-                    <span>{material.estimatedTime}</span>
-                    <span>•</span>
-                    <TrendingUp className="w-3 h-3" />
-                    <span>{material.sharing} shares</span>
-                  </div>
-                  <Button size="sm" variant="outline">
-                    <Share2 className="w-4 h-4 mr-1" />
-                    Access
+                  <span className="text-green-400 font-bold text-sm">{material.price}</span>
+                  <Button size="sm" variant="outline" className="text-xs">
+                    <Share2 className="w-3 h-3 mr-1" />
+                    Buy
                   </Button>
                 </div>
               </CardContent>
