@@ -10,16 +10,19 @@ const Header = ({ onMenuClick }: HeaderProps) => {
   const [profileOpen, setProfileOpen] = useState(false);
 
   return (
-    <header className="bg-black border-b border-gray-800 px-6 py-4">
+    <header className="bg-black border-b border-gray-800 px-4 lg:px-6 py-4">
       <div className="flex items-center justify-between">
         <button
           onClick={onMenuClick}
-          className="text-white p-2 hover:bg-gray-800 rounded-lg"
+          className="text-white p-2 hover:bg-gray-800 rounded-lg lg:hidden"
         >
           <Menu size={20} />
         </button>
         
-        <div className="flex items-center space-x-4">
+        {/* Spacer for desktop */}
+        <div className="hidden lg:block"></div>
+        
+        <div className="flex items-center space-x-2 lg:space-x-4">
           <button className="text-white p-2 hover:bg-gray-800 rounded-lg">
             <Sun size={20} />
           </button>
@@ -39,8 +42,8 @@ const Header = ({ onMenuClick }: HeaderProps) => {
               className="flex items-center space-x-2 text-white hover:bg-gray-800 rounded-lg p-2"
             >
               <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
-              <span className="text-sm">Sandro Williams</span>
-              <ChevronDown size={16} />
+              <span className="text-sm hidden sm:block">Sandro Williams</span>
+              <ChevronDown size={16} className="hidden sm:block" />
             </button>
             
             {profileOpen && (
