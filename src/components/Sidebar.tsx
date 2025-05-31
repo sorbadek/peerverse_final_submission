@@ -2,6 +2,8 @@
 import React from 'react';
 import { Home, BookOpen, Users, MessageSquare, ShoppingBag, Vault, User, Settings, LogOut, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { toast } from '@/hooks/use-toast';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -11,6 +13,7 @@ interface SidebarProps {
 const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
 
   const mainMenuItems = [
     { icon: Home, label: 'Dashboard', path: '/' },
@@ -24,11 +27,20 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
 
   const bottomMenuItems = [
     { icon: Settings, label: 'Settings', path: '/settings' },
-    { icon: LogOut, label: 'Log Out', path: '/logout' },
   ];
 
   const handleNavigation = (path: string) => {
     navigate(path);
+    onClose();
+  };
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out.",
+    });
+    navigate('/');
     onClose();
   };
 
@@ -81,6 +93,14 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
               <span className="font-medium">{item.label}</span>
             </button>
           ))}
+          
+          <button
+            onClick={handleLogout}
+            className="flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors w-full text-left text-gray-300 hover:bg-gray-800 hover:text-white"
+          >
+            <LogOut size={20} />
+            <span className="font-medium">Log Out</span>
+          </button>
         </div>
       </div>
     </div>
