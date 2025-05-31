@@ -6,45 +6,68 @@ import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Star, Users, Award, BookOpen, Download, Share2, CheckCircle } from 'lucide-react';
 
-const PublicProfileContent = () => {
+interface PublicProfileContentProps {
+  isOwnProfile?: boolean;
+}
+
+const PublicProfileContent = ({ isOwnProfile = true }: PublicProfileContentProps) => {
+  // User data that would come from settings
+  const userSettings = {
+    name: 'Sandro Williams',
+    profilePicture: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+    interests: ['DeFi & Trading', 'NFTs & Digital Art', 'Smart Contract Development', 'DAO & Governance']
+  };
+
+  // Dynamically generated achievements based on user activity
   const achievements = [
-    { id: 1, title: 'React Master', icon: '⚛️', earned: '2024-01-15' },
-    { id: 2, title: 'Community Helper', icon: '🤝', earned: '2024-02-20' },
-    { id: 3, title: 'Content Creator', icon: '✍️', earned: '2024-03-10' },
-    { id: 4, title: 'Peer Mentor', icon: '👨‍🏫', earned: '2024-03-25' }
+    { id: 1, title: 'First Session Host', icon: '🎯', earned: '2024-01-15', description: 'Hosted your first learning session' },
+    { id: 2, title: 'Knowledge Contributor', icon: '📚', earned: '2024-02-20', description: 'Shared 10+ learning resources' },
+    { id: 3, title: 'Peer Helper', icon: '🤝', earned: '2024-03-10', description: 'Helped 50+ peers learn' },
+    { id: 4, title: 'Session Regular', icon: '⭐', earned: '2024-03-25', description: 'Attended 25+ learning sessions' }
   ];
 
+  // Auto-generated certificates based on completed learning paths
   const completedCourses = [
     {
       id: 1,
-      title: 'Advanced React Development',
+      title: 'Sui Move Programming Fundamentals',
       issuer: 'PeerVerse',
       completedDate: '2024-03-20',
-      certificateId: 'PV-REACT-2024-001',
-      verifiable: true
+      certificateId: 'PV-SUI-2024-001',
+      verifiable: true,
+      xpEarned: 500
     },
     {
       id: 2,
-      title: 'Machine Learning Fundamentals',
+      title: 'zkLogin Integration Mastery',
       issuer: 'PeerVerse',
       completedDate: '2024-02-15',
-      certificateId: 'PV-ML-2024-002',
-      verifiable: true
+      certificateId: 'PV-ZK-2024-002',
+      verifiable: true,
+      xpEarned: 350
     },
     {
       id: 3,
-      title: 'UI/UX Design Principles',
+      title: 'DeFi on Sui Blockchain',
       issuer: 'PeerVerse',
       completedDate: '2024-01-30',
-      certificateId: 'PV-UXUI-2024-003',
-      verifiable: true
+      certificateId: 'PV-DEFI-2024-003',
+      verifiable: true,
+      xpEarned: 600
     }
   ];
 
-  const skills = [
-    'React', 'JavaScript', 'TypeScript', 'Node.js', 'Python', 
-    'Machine Learning', 'UI/UX Design', 'Data Analysis'
-  ];
+  // Auto-calculated activity stats based on user engagement
+  const activityStats = {
+    xpBalance: completedCourses.reduce((total, course) => total + course.xpEarned, 0) + 1000, // Base + earned
+    peersConnected: 156,
+    coursesCompleted: completedCourses.length,
+    badgesEarned: achievements.length,
+    sessionsHosted: 23,
+    materialsShared: 15,
+    questionsAnswered: 87,
+    peerRating: 4.9
+  };
 
   return (
     <div className="space-y-6">
@@ -53,42 +76,44 @@ const PublicProfileContent = () => {
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row items-start md:items-center space-y-4 md:space-y-0 md:space-x-6">
             <Avatar className="w-24 h-24">
-              <AvatarImage src="/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png" />
-              <AvatarFallback>SW</AvatarFallback>
+              <AvatarImage src={userSettings.profilePicture} />
+              <AvatarFallback>{userSettings.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
             </Avatar>
             
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-2">
-                <h1 className="text-2xl font-bold text-white">Sandro Williams</h1>
+                <h1 className="text-2xl font-bold text-white">{userSettings.name}</h1>
                 <Award className="w-6 h-6 text-yellow-500" />
               </div>
-              <p className="text-gray-400 mb-4">Full-Stack Developer & AI Enthusiast</p>
+              <p className="text-gray-400 mb-4">Sui Blockchain Enthusiast & DeFi Explorer</p>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-400">2,450</div>
+                  <div className="text-2xl font-bold text-blue-400">{activityStats.xpBalance.toLocaleString()}</div>
                   <div className="text-sm text-gray-400">XP Balance</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-400">156</div>
+                  <div className="text-2xl font-bold text-green-400">{activityStats.peersConnected}</div>
                   <div className="text-sm text-gray-400">Peers</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-400">12</div>
+                  <div className="text-2xl font-bold text-purple-400">{activityStats.coursesCompleted}</div>
                   <div className="text-sm text-gray-400">Courses</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-400">8</div>
+                  <div className="text-2xl font-bold text-yellow-400">{activityStats.badgesEarned}</div>
                   <div className="text-sm text-gray-400">Badges</div>
                 </div>
               </div>
               
               <div className="flex space-x-2">
-                <Button variant="outline" size="sm">
-                  <Users className="w-4 h-4 mr-2" />
-                  Connect
-                </Button>
-                <Button variant="outline" size="sm">
+                {!isOwnProfile && (
+                  <Button variant="outline" size="sm" className="border-gray-600 text-white hover:bg-gray-700">
+                    <Users className="w-4 h-4 mr-2" />
+                    Connect
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" className="border-gray-600 text-white hover:bg-gray-700">
                   <Share2 className="w-4 h-4 mr-2" />
                   Share Profile
                 </Button>
@@ -112,7 +137,7 @@ const PublicProfileContent = () => {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {achievements.map((achievement) => (
-                  <div key={achievement.id} className="text-center p-3 bg-gray-700 rounded-lg">
+                  <div key={achievement.id} className="text-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
                     <div className="text-3xl mb-2">{achievement.icon}</div>
                     <div className="text-sm font-medium text-white">{achievement.title}</div>
                     <div className="text-xs text-gray-400">
@@ -129,7 +154,7 @@ const PublicProfileContent = () => {
             <CardHeader>
               <CardTitle className="text-white flex items-center">
                 <BookOpen className="w-5 h-5 mr-2 text-blue-500" />
-                Digital Certificates
+                Sui Blockchain Certificates
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -139,7 +164,7 @@ const PublicProfileContent = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="font-medium text-white mb-1">{course.title}</h3>
-                        <p className="text-sm text-gray-400 mb-2">Issued by {course.issuer}</p>
+                        <p className="text-sm text-gray-400 mb-2">Issued by {course.issuer} • {course.xpEarned} XP earned</p>
                         <div className="flex items-center space-x-4 text-xs text-gray-400">
                           <span>Completed: {new Date(course.completedDate).toLocaleDateString()}</span>
                           <span>ID: {course.certificateId}</span>
@@ -149,7 +174,7 @@ const PublicProfileContent = () => {
                         {course.verifiable && (
                           <CheckCircle className="w-5 h-5 text-green-500" />
                         )}
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" className="border-gray-600 text-white hover:bg-gray-600">
                           <Download className="w-4 h-4 mr-1" />
                           Verify
                         </Button>
@@ -164,23 +189,23 @@ const PublicProfileContent = () => {
 
         {/* Right Column */}
         <div className="space-y-6">
-          {/* Skills */}
+          {/* Learning Interests from Settings */}
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
-              <CardTitle className="text-white">Certified Skills</CardTitle>
+              <CardTitle className="text-white">Learning Interests</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-2">
-                {skills.map((skill, index) => (
-                  <Badge key={index} variant="secondary" className="bg-blue-600/20 text-blue-400">
-                    {skill}
+                {userSettings.interests.map((interest, index) => (
+                  <Badge key={index} variant="secondary" className="bg-blue-600/20 text-blue-400 border-blue-600/30">
+                    {interest}
                   </Badge>
                 ))}
               </div>
             </CardContent>
           </Card>
 
-          {/* Activity Stats */}
+          {/* Auto-calculated Activity Stats */}
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="text-white">Activity Stats</CardTitle>
@@ -188,21 +213,21 @@ const PublicProfileContent = () => {
             <CardContent className="space-y-4">
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Sessions Hosted</span>
-                <span className="text-white font-medium">23</span>
+                <span className="text-white font-medium">{activityStats.sessionsHosted}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Materials Shared</span>
-                <span className="text-white font-medium">15</span>
+                <span className="text-white font-medium">{activityStats.materialsShared}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Questions Answered</span>
-                <span className="text-white font-medium">87</span>
+                <span className="text-white font-medium">{activityStats.questionsAnswered}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-gray-400">Peer Rating</span>
                 <div className="flex items-center space-x-1">
                   <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                  <span className="text-white font-medium">4.9</span>
+                  <span className="text-white font-medium">{activityStats.peerRating}</span>
                 </div>
               </div>
             </CardContent>

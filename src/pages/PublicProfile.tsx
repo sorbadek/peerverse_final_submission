@@ -6,6 +6,10 @@ import PublicProfileContent from '../components/PublicProfileContent';
 
 const PublicProfile = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // In a real app, this would be determined by comparing the current user ID with the profile being viewed
+  // For now, we'll assume it's the user's own profile when accessed from /public-profile
+  const isOwnProfile = true;
 
   return (
     <div className="min-h-screen bg-black flex w-full">
@@ -24,7 +28,7 @@ const PublicProfile = () => {
         
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
           <div className="max-w-7xl mx-auto">
-            <PublicProfileContent />
+            <PublicProfileContent isOwnProfile={isOwnProfile} />
           </div>
         </main>
       </div>
