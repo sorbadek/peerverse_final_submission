@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { Input } from './ui/input';
@@ -31,22 +32,7 @@ const LearnContent = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [isContributeModalOpen, setIsContributeModalOpen] = useState(false);
-  const { toast } = useToast();
-
-  const handleSaveToVault = (resource: LearningResource) => {
-    // Here you would typically save to a backend or local storage
-    // For now, we'll just show a success message
-    toast({
-      title: "Saved to Vault",
-      description: `"${resource.title}" has been saved to your vault for offline access.`,
-    });
-  };
-
-  const handleContributeResource = (newResource: LearningResource) => {
-    setLearningResources(prev => [newResource, ...prev]);
-  };
-
-  const learningResources: LearningResource[] = [
+  const [learningResources, setLearningResources] = useState<LearningResource[]>([
     {
       id: 1,
       title: "Advanced React Patterns and Best Practices",
@@ -131,7 +117,21 @@ const LearnContent = () => {
       rating: 4.5,
       downloaded: 650
     }
-  ];
+  ]);
+  const { toast } = useToast();
+
+  const handleSaveToVault = (resource: LearningResource) => {
+    // Here you would typically save to a backend or local storage
+    // For now, we'll just show a success message
+    toast({
+      title: "Saved to Vault",
+      description: `"${resource.title}" has been saved to your vault for offline access.`,
+    });
+  };
+
+  const handleContributeResource = (newResource: LearningResource) => {
+    setLearningResources(prev => [newResource, ...prev]);
+  };
 
   const categories = ['all', 'Frontend', 'Backend', 'Design', 'Mobile', 'Computer Science'];
   const levels = ['all', 'Beginner', 'Intermediate', 'Advanced'];
