@@ -37,7 +37,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       <div className="p-6 h-full flex flex-col">
         <div className="flex items-center justify-between mb-8">
           <img 
-            src="/lovable-uploads/fbcd878a-13d9-4472-bbad-e95c8dddd985.png" 
+            src="/lovable-uploads/f60d0cca-0f77-48f5-8700-a54fdfd0c187.png" 
             alt="PeerVerse Logo" 
             className="h-8 w-auto"
           />
