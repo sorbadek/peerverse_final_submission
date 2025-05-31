@@ -1,7 +1,11 @@
 
 import React, { useState } from 'react';
-import { X, Plus } from 'lucide-react';
+import { X, Plus, Image, Hash, MapPin } from 'lucide-react';
 import { useSocial } from './SocialContext';
+import { Button } from './ui/button';
+import { Textarea } from './ui/textarea';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 
 const CreatePostModal = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,99 +37,123 @@ const CreatePostModal = () => {
 
   return (
     <>
-      <button
+      <Button
         onClick={() => setIsOpen(true)}
-        className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+        className="w-full bg-blue-600 hover:bg-blue-700 text-white justify-start"
       >
-        <Plus size={16} />
-        <span>Create Post</span>
-      </button>
+        <Plus size={16} className="mr-2" />
+        Create Post
+      </Button>
 
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-6 border-b border-gray-800">
-              <h2 className="text-xl font-semibold text-white">Create New Post</h2>
-              <button
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+          <Card className="bg-gray-900 border-gray-800 w-full max-w-2xl max-h-[90vh] overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-gray-800">
+              <CardTitle className="text-xl font-semibold text-white">Create Post</CardTitle>
+              <Button
+                variant="ghost"
+                size="icon"
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 hover:text-white"
               >
-                <X size={24} />
-              </button>
-            </div>
+                <X size={20} />
+              </Button>
+            </CardHeader>
 
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Title (optional)
-                </label>
-                <input
-                  type="text"
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Enter post title..."
-                  className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700 focus:border-blue-500 focus:outline-none"
-                />
-              </div>
+            <CardContent className="p-0">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* User Info */}
+                <div className="flex items-center space-x-3 p-4 pb-0">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src="https://ui-avatars.com/api/?name=Current+User&background=6366f1&color=fff" />
+                    <AvatarFallback>CU</AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <p className="font-semibold text-white">Current User</p>
+                    <p className="text-xs text-gray-400">Posting to Community</p>
+                  </div>
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Content *
-                </label>
-                <textarea
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  placeholder="Share your thoughts, research, or ideas..."
-                  className="w-full bg-gray-800 text-white rounded-lg p-3 resize-none border border-gray-700 focus:border-blue-500 focus:outline-none"
-                  rows={6}
-                  required
-                />
-              </div>
+                <div className="px-4 space-y-4">
+                  {/* Title Input */}
+                  <input
+                    type="text"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Add a title (optional)"
+                    className="w-full bg-transparent text-white text-lg placeholder-gray-500 border-none outline-none resize-none"
+                  />
 
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Tags (comma-separated)
-                </label>
-                <input
-                  type="text"
-                  value={tags}
-                  onChange={(e) => setTags(e.target.value)}
-                  placeholder="e.g., research, ai, physics"
-                  className="w-full bg-gray-800 text-white rounded-lg p-3 border border-gray-700 focus:border-blue-500 focus:outline-none"
-                />
-              </div>
+                  {/* Content Input */}
+                  <Textarea
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    placeholder="What's on your mind?"
+                    className="w-full bg-transparent text-white placeholder-gray-500 border-none outline-none resize-none min-h-[120px] text-base"
+                    required
+                  />
 
-              <div className="flex items-center space-x-2">
-                <input
-                  type="checkbox"
-                  id="isResearch"
-                  checked={isResearch}
-                  onChange={(e) => setIsResearch(e.target.checked)}
-                  className="rounded border-gray-700"
-                />
-                <label htmlFor="isResearch" className="text-sm text-gray-300">
-                  This is a research post
-                </label>
-              </div>
+                  {/* Tags Input */}
+                  <div className="flex items-center space-x-2">
+                    <Hash size={16} className="text-gray-400" />
+                    <input
+                      type="text"
+                      value={tags}
+                      onChange={(e) => setTags(e.target.value)}
+                      placeholder="Add tags (comma-separated)"
+                      className="flex-1 bg-transparent text-white placeholder-gray-500 border-none outline-none text-sm"
+                    />
+                  </div>
 
-              <div className="flex space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="flex-1 bg-gray-700 text-white px-4 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={!content.trim()}
-                  className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Post
-                </button>
-              </div>
-            </form>
-          </div>
+                  {/* Research Toggle */}
+                  <div className="flex items-center space-x-3">
+                    <input
+                      type="checkbox"
+                      id="isResearch"
+                      checked={isResearch}
+                      onChange={(e) => setIsResearch(e.target.checked)}
+                      className="rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label htmlFor="isResearch" className="text-sm text-gray-300">
+                      This is a research post
+                    </label>
+                  </div>
+                </div>
+
+                {/* Action Bar */}
+                <div className="flex items-center justify-between p-4 border-t border-gray-800">
+                  <div className="flex items-center space-x-4">
+                    <Button type="button" variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                      <Image size={16} className="mr-1" />
+                      Photo
+                    </Button>
+                    <Button type="button" variant="ghost" size="sm" className="text-gray-400 hover:text-white">
+                      <MapPin size={16} className="mr-1" />
+                      Location
+                    </Button>
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setIsOpen(false)}
+                      className="text-gray-400"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="submit"
+                      disabled={!content.trim()}
+                      className="bg-blue-600 hover:bg-blue-700"
+                    >
+                      Post
+                    </Button>
+                  </div>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         </div>
       )}
     </>
