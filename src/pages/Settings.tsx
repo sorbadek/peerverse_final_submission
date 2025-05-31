@@ -9,31 +9,64 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
-import { Wallet, Shield, Globe, Coins, Bell, User, Eye } from 'lucide-react';
+import { Wallet, Shield, User, Bell, Eye, Upload, X } from 'lucide-react';
 
 const Settings = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [walletAddress, setWalletAddress] = useState('0x742d35Cc6635Cb9532991f5a1e9F27c5d9F542B0');
+  const [zkLoginAddress, setZkLoginAddress] = useState('0x742d35Cc6635Cb9532991f5a1e9F27c5d9F542B0');
+  const [userName, setUserName] = useState('Sandro Williams');
+  const [profilePicture, setProfilePicture] = useState('');
+  const [selectedInterests, setSelectedInterests] = useState<string[]>(['defi', 'nfts']);
   const [autoStakeRewards, setAutoStakeRewards] = useState(true);
   const [notifications, setNotifications] = useState(true);
   const [publicProfile, setPublicProfile] = useState(true);
-  const [selectedNetwork, setSelectedNetwork] = useState('ethereum');
   const [privacyMode, setPrivacyMode] = useState(false);
+
+  const availableInterests = [
+    { id: 'defi', label: 'DeFi & Trading' },
+    { id: 'nfts', label: 'NFTs & Digital Art' },
+    { id: 'gaming', label: 'Blockchain Gaming' },
+    { id: 'development', label: 'Smart Contract Development' },
+    { id: 'dao', label: 'DAO & Governance' },
+    { id: 'infrastructure', label: 'Blockchain Infrastructure' },
+    { id: 'security', label: 'Security & Auditing' },
+    { id: 'tokenomics', label: 'Tokenomics & Economics' }
+  ];
 
   const handleSaveSettings = () => {
     toast({
       title: "Settings saved",
-      description: "Your Web3 settings have been updated successfully.",
+      description: "Your profile and preferences have been updated successfully.",
     });
   };
 
-  const handleDisconnectWallet = () => {
+  const handleDisconnectZkLogin = () => {
     toast({
-      title: "Wallet disconnected",
-      description: "Your wallet has been disconnected from the platform.",
+      title: "zkLogin disconnected",
+      description: "Your zkLogin session has been disconnected from the platform.",
       variant: "destructive",
     });
+  };
+
+  const handleInterestToggle = (interestId: string) => {
+    setSelectedInterests(prev => 
+      prev.includes(interestId) 
+        ? prev.filter(id => id !== interestId)
+        : [...prev, interestId]
+    );
+  };
+
+  const handleProfilePictureUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setProfilePicture(e.target?.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -55,48 +88,140 @@ const Settings = () => {
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-white">Settings</h1>
-              <p className="text-gray-400 mt-2">Manage your Web3 preferences and account settings</p>
+              <p className="text-gray-400 mt-2">Manage your profile and Sui blockchain preferences</p>
             </div>
 
-            {/* Wallet Settings */}
+            {/* Profile Settings */}
+            <Card className="bg-gray-900 border-gray-700">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-white">
+                  <User className="h-5 w-5" />
+                  Profile Settings
+                </CardTitle>
+                <CardDescription className="text-gray-400">
+                  Customize your profile information and display preferences
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                {/* Profile Picture */}
+                <div className="space-y-2">
+                  <Label className="text-white">Profile Picture</Label>
+                  <div className="flex items-center gap-4">
+                    <Avatar className="h-20 w-20">
+                      <AvatarImage src={profilePicture} />
+                      <AvatarFallback className="text-lg">
+                        {userName.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="space-y-2">
+                      <Label htmlFor="profile-upload" className="cursor-pointer">
+                        <Button variant="outline" className="border-gray-700 text-white hover:bg-gray-800" asChild>
+                          <span>
+                            <Upload className="h-4 w-4 mr-2" />
+                            Upload Photo
+                          </span>
+                        </Button>
+                      </Label>
+                      <input
+                        id="profile-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleProfilePictureUpload}
+                      />
+                      {profilePicture && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          onClick={() => setProfilePicture('')}
+                          className="text-gray-400 hover:text-white"
+                        >
+                          <X className="h-4 w-4 mr-1" />
+                          Remove
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Display Name */}
+                <div className="space-y-2">
+                  <Label htmlFor="display-name" className="text-white">Display Name</Label>
+                  <Input
+                    id="display-name"
+                    value={userName}
+                    onChange={(e) => setUserName(e.target.value)}
+                    placeholder="Enter your display name"
+                    className="bg-gray-800 border-gray-700 text-white"
+                  />
+                </div>
+
+                {/* Interests */}
+                <div className="space-y-3">
+                  <Label className="text-white">Learning Interests</Label>
+                  <p className="text-sm text-gray-400">
+                    Select topics you're interested in to get personalized content recommendations
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {availableInterests.map((interest) => (
+                      <div key={interest.id} className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id={interest.id}
+                          checked={selectedInterests.includes(interest.id)}
+                          onChange={() => handleInterestToggle(interest.id)}
+                          className="rounded border-gray-600 bg-gray-800 text-blue-600 focus:ring-blue-500"
+                        />
+                        <Label htmlFor={interest.id} className="text-sm text-white cursor-pointer">
+                          {interest.label}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* zkLogin & Sui Network Settings */}
             <Card className="bg-gray-900 border-gray-700">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white">
                   <Wallet className="h-5 w-5" />
-                  Wallet & Network
+                  zkLogin & Sui Network
                 </CardTitle>
                 <CardDescription className="text-gray-400">
-                  Manage your connected wallet and blockchain network preferences
+                  Manage your zkLogin authentication and Sui blockchain preferences
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="wallet" className="text-white">Connected Wallet Address</Label>
+                  <Label htmlFor="zklogin" className="text-white">Connected zkLogin Address</Label>
                   <div className="flex gap-2">
                     <Input
-                      id="wallet"
-                      value={walletAddress}
+                      id="zklogin"
+                      value={zkLoginAddress}
                       readOnly
                       className="font-mono text-sm bg-gray-800 border-gray-700 text-white"
                     />
-                    <Button variant="outline" onClick={handleDisconnectWallet} className="border-gray-700 text-white hover:bg-gray-800">
+                    <Button variant="outline" onClick={handleDisconnectZkLogin} className="border-gray-700 text-white hover:bg-gray-800">
                       Disconnect
                     </Button>
                   </div>
+                  <p className="text-xs text-gray-500">
+                    zkLogin provides privacy-preserving authentication using zero-knowledge proofs
+                  </p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="network" className="text-white">Preferred Network</Label>
-                  <Select value={selectedNetwork} onValueChange={setSelectedNetwork}>
+                  <Label htmlFor="network" className="text-white">Sui Network</Label>
+                  <Select defaultValue="mainnet">
                     <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
                       <SelectValue placeholder="Select network" />
                     </SelectTrigger>
                     <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="ethereum" className="text-white hover:bg-gray-700">Ethereum Mainnet</SelectItem>
-                      <SelectItem value="polygon" className="text-white hover:bg-gray-700">Polygon</SelectItem>
-                      <SelectItem value="arbitrum" className="text-white hover:bg-gray-700">Arbitrum</SelectItem>
-                      <SelectItem value="optimism" className="text-white hover:bg-gray-700">Optimism</SelectItem>
-                      <SelectItem value="base" className="text-white hover:bg-gray-700">Base</SelectItem>
+                      <SelectItem value="mainnet" className="text-white hover:bg-gray-700">Sui Mainnet</SelectItem>
+                      <SelectItem value="testnet" className="text-white hover:bg-gray-700">Sui Testnet</SelectItem>
+                      <SelectItem value="devnet" className="text-white hover:bg-gray-700">Sui Devnet</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -107,19 +232,19 @@ const Settings = () => {
             <Card className="bg-gray-900 border-gray-700">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white">
-                  <Coins className="h-5 w-5" />
-                  Tokens & Rewards
+                  <Eye className="h-5 w-5" />
+                  Rewards & Learning
                 </CardTitle>
                 <CardDescription className="text-gray-400">
-                  Configure how you want to handle your earned tokens and rewards
+                  Configure how you want to handle your earned tokens and learning rewards
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
-                    <Label htmlFor="auto-stake" className="text-white">Auto-stake Rewards</Label>
+                    <Label htmlFor="auto-stake" className="text-white">Auto-stake Learning Rewards</Label>
                     <p className="text-sm text-gray-400">
-                      Automatically stake earned tokens for additional rewards
+                      Automatically stake earned SUI tokens for additional rewards
                     </p>
                   </div>
                   <Switch
@@ -134,23 +259,9 @@ const Settings = () => {
                 <div className="space-y-2">
                   <Label className="text-white">Minimum Withdrawal Amount</Label>
                   <div className="flex items-center gap-2">
-                    <Input type="number" placeholder="100" className="w-32 bg-gray-800 border-gray-700 text-white" />
-                    <span className="text-sm text-gray-400">LEARN tokens</span>
+                    <Input type="number" placeholder="10" className="w-32 bg-gray-800 border-gray-700 text-white" />
+                    <span className="text-sm text-gray-400">SUI tokens</span>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-white">Gas Fee Preference</Label>
-                  <Select defaultValue="standard">
-                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                      <SelectValue placeholder="Select gas preference" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="slow" className="text-white hover:bg-gray-700">Slow (Lower fees)</SelectItem>
-                      <SelectItem value="standard" className="text-white hover:bg-gray-700">Standard</SelectItem>
-                      <SelectItem value="fast" className="text-white hover:bg-gray-700">Fast (Higher fees)</SelectItem>
-                    </SelectContent>
-                  </Select>
                 </div>
               </CardContent>
             </Card>
@@ -185,7 +296,7 @@ const Settings = () => {
                   <div className="space-y-0.5">
                     <Label htmlFor="public-profile" className="text-white">Public Profile</Label>
                     <p className="text-sm text-gray-400">
-                      Allow others to view your achievements and NFT collection
+                      Allow others to view your achievements and learning progress
                     </p>
                   </div>
                   <Switch
@@ -193,26 +304,6 @@ const Settings = () => {
                     checked={publicProfile}
                     onCheckedChange={setPublicProfile}
                   />
-                </div>
-
-                <Separator className="bg-gray-700" />
-
-                <div className="space-y-2">
-                  <Label className="text-white">Data Sharing</Label>
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="analytics" className="rounded" defaultChecked />
-                      <Label htmlFor="analytics" className="text-sm text-white">
-                        Share anonymous analytics to improve the platform
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <input type="checkbox" id="research" className="rounded" />
-                      <Label htmlFor="research" className="text-sm text-white">
-                        Participate in educational research studies
-                      </Label>
-                    </div>
-                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -249,7 +340,7 @@ const Settings = () => {
                   <div className="flex items-center space-x-2">
                     <input type="checkbox" id="rewards-notif" className="rounded" defaultChecked />
                     <Label htmlFor="rewards-notif" className="text-sm text-white">
-                      Token rewards and airdrops
+                      SUI token rewards and staking updates
                     </Label>
                   </div>
                   <div className="flex items-center space-x-2">
@@ -264,55 +355,6 @@ const Settings = () => {
                       Community updates and events
                     </Label>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <input type="checkbox" id="governance-notif" className="rounded" />
-                    <Label htmlFor="governance-notif" className="text-sm text-white">
-                      Governance proposals and voting
-                    </Label>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* NFT & Digital Assets */}
-            <Card className="bg-gray-900 border-gray-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Eye className="h-5 w-5" />
-                  NFTs & Digital Assets
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Manage your educational NFTs and digital certificates
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label className="text-white">Display Preferences</Label>
-                  <Select defaultValue="all">
-                    <SelectTrigger className="bg-gray-800 border-gray-700 text-white">
-                      <SelectValue placeholder="Select display option" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-gray-800 border-gray-700">
-                      <SelectItem value="all" className="text-white hover:bg-gray-700">Show all NFTs</SelectItem>
-                      <SelectItem value="achievements" className="text-white hover:bg-gray-700">Achievements only</SelectItem>
-                      <SelectItem value="certificates" className="text-white hover:bg-gray-700">Certificates only</SelectItem>
-                      <SelectItem value="hidden" className="text-white hover:bg-gray-700">Hide all</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="auto-mint" className="rounded" defaultChecked />
-                  <Label htmlFor="auto-mint" className="text-sm text-white">
-                    Auto-mint completion certificates as NFTs
-                  </Label>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <input type="checkbox" id="marketplace" className="rounded" />
-                  <Label htmlFor="marketplace" className="text-sm text-white">
-                    Allow trading of achievement NFTs on marketplace
-                  </Label>
                 </div>
               </CardContent>
             </Card>
