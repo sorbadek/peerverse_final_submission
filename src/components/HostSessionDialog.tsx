@@ -12,7 +12,7 @@ import {
 } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
-import { Video, Users, Clock, Award } from 'lucide-react';
+import { Video, Users, Clock } from 'lucide-react';
 import { useSession } from './SessionManager';
 import { toast } from '@/hooks/use-toast';
 
@@ -28,8 +28,7 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
     description: '',
     category: '',
     duration: '',
-    maxParticipants: '',
-    xpReward: ''
+    maxParticipants: ''
   });
 
   const categories = ['Frontend', 'Backend', 'Design', 'Computer Science', 'Mobile', 'DevOps'];
@@ -81,8 +80,7 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
       description: '',
       category: '',
       duration: '',
-      maxParticipants: '',
-      xpReward: ''
+      maxParticipants: ''
     });
   };
 
@@ -97,7 +95,7 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
             Host a Learning Session
           </DialogTitle>
           <DialogDescription className="text-gray-400">
-            Share your knowledge and earn XP by hosting a live session
+            Share your knowledge with the community through live sessions
           </DialogDescription>
         </DialogHeader>
 
@@ -158,45 +156,28 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="maxParticipants" className="text-gray-300 flex items-center">
-                <Users className="mr-1 h-4 w-4" />
-                Max Participants
-              </Label>
-              <Input
-                id="maxParticipants"
-                type="number"
-                placeholder="20"
-                value={sessionData.maxParticipants}
-                onChange={(e) => setSessionData({ ...sessionData, maxParticipants: e.target.value })}
-                className="bg-gray-800 border-gray-700 text-white mt-1"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="xpReward" className="text-gray-300 flex items-center">
-                <Award className="mr-1 h-4 w-4" />
-                XP Reward
-              </Label>
-              <Input
-                id="xpReward"
-                type="number"
-                placeholder="25"
-                value={sessionData.xpReward}
-                onChange={(e) => setSessionData({ ...sessionData, xpReward: e.target.value })}
-                className="bg-gray-800 border-gray-700 text-white mt-1"
-              />
-            </div>
+          <div>
+            <Label htmlFor="maxParticipants" className="text-gray-300 flex items-center">
+              <Users className="mr-1 h-4 w-4" />
+              Max Participants
+            </Label>
+            <Input
+              id="maxParticipants"
+              type="number"
+              placeholder="20"
+              value={sessionData.maxParticipants}
+              onChange={(e) => setSessionData({ ...sessionData, maxParticipants: e.target.value })}
+              className="bg-gray-800 border-gray-700 text-white mt-1"
+            />
           </div>
 
           <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3">
             <div className="flex items-center text-blue-300 text-sm mb-1">
-              <Award className="mr-2 h-4 w-4" />
-              <span className="font-medium">XP Earnings</span>
+              <Clock className="mr-2 h-4 w-4" />
+              <span className="font-medium">Session Rewards</span>
             </div>
             <p className="text-blue-200 text-sm">
-              You'll earn XP based on session duration, participants, and feedback ratings.
+              XP and rewards will be automatically calculated by the system based on session quality and engagement.
             </p>
           </div>
         </div>

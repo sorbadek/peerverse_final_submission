@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Video, Users, Plus, Clock, Star, TrendingUp, Award } from 'lucide-react';
 import { Button } from './ui/button';
@@ -16,7 +15,6 @@ interface OngoingSession {
   category: string;
   duration: string;
   isLive: boolean;
-  xpReward: number;
   description: string;
 }
 
@@ -34,7 +32,6 @@ const TutorHubContent = () => {
       category: 'Frontend',
       duration: '45 min',
       isLive: true,
-      xpReward: 25,
       description: 'Exploring advanced React hooks patterns and custom hook creation'
     },
     {
@@ -45,7 +42,6 @@ const TutorHubContent = () => {
       category: 'Computer Science',
       duration: '60 min',
       isLive: true,
-      xpReward: 30,
       description: 'Collaborative problem solving session for common data structure challenges'
     },
     {
@@ -56,7 +52,6 @@ const TutorHubContent = () => {
       category: 'Design',
       duration: '30 min',
       isLive: true,
-      xpReward: 20,
       description: 'Peer review and feedback session for design portfolios'
     },
     {
@@ -67,7 +62,6 @@ const TutorHubContent = () => {
       category: 'Backend',
       duration: '90 min',
       isLive: true,
-      xpReward: 40,
       description: 'Building RESTful APIs with Express and best practices'
     }
   ];

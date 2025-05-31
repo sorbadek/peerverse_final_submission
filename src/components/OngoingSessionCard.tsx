@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, Clock, Star, Play, Award } from 'lucide-react';
+import { Users, Clock, Star, Play } from 'lucide-react';
 import { Button } from './ui/button';
 import { useSession } from './SessionManager';
 import { toast } from '@/hooks/use-toast';
@@ -13,7 +13,6 @@ interface OngoingSession {
   category: string;
   duration: string;
   isLive: boolean;
-  xpReward: number;
   description: string;
 }
 
@@ -76,10 +75,6 @@ const OngoingSessionCard = ({ session }: OngoingSessionCardProps) => {
           <div className="flex items-center">
             <Clock className="h-4 w-4 mr-1" />
             <span>{session.duration}</span>
-          </div>
-          <div className="flex items-center text-yellow-400">
-            <Award className="h-4 w-4 mr-1" />
-            <span>{session.xpReward} XP</span>
           </div>
         </div>
       </div>
