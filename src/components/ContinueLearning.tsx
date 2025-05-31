@@ -35,7 +35,7 @@ const ContinueLearning = () => {
 
   return (
     <div className="bg-gradient-to-r from-cyan-400 via-cyan-500 to-blue-500 rounded-2xl p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Continue Learning</h2>
+      <h2 className="text-2xl font-bold text-white mb-6">Things That Might Interest You</h2>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {courses.map((course, index) => (
