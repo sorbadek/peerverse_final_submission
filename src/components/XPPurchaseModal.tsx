@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -10,7 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Check, Zap } from 'lucide-react';
+import { Check } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface XPPurchaseModalProps {
@@ -84,7 +83,11 @@ const XPPurchaseModal = ({ isOpen, onClose }: XPPurchaseModalProps) => {
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl">
-            <Zap className="h-6 w-6 text-yellow-500" />
+            <img 
+              src="/lovable-uploads/9246f030-df64-4104-a285-57ba9466318c.png" 
+              alt="XP Coin" 
+              className="h-6 w-6"
+            />
             Purchase X.P Tokens
           </DialogTitle>
           <DialogDescription>

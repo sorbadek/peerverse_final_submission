@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { TrendingUp, TrendingDown, AlertTriangle, Award } from 'lucide-react';
+import { TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
 
 const XPContributionTracker = () => {
   // Mock user data - in real app this would come from backend
@@ -16,7 +16,11 @@ const XPContributionTracker = () => {
         {/* Current XP */}
         <div className="text-center">
           <div className="flex items-center justify-center mb-2">
-            <Award className="h-5 w-5 text-yellow-400 mr-2" />
+            <img 
+              src="/lovable-uploads/9246f030-df64-4104-a285-57ba9466318c.png" 
+              alt="XP Coin" 
+              className="w-5 h-5 mr-2"
+            />
             <span className="text-gray-400 text-sm">Current XP</span>
           </div>
           <div className="text-2xl font-bold text-white">{userXP.toLocaleString()}</div>
@@ -77,7 +81,6 @@ const XPContributionTracker = () => {
         </div>
       )}
 
-      {/* Information Box */}
       <div className="mt-4 p-3 bg-blue-900/20 border border-blue-800 rounded-lg">
         <p className="text-blue-200 text-sm">
           <span className="font-medium">How it works:</span> Attending sessions consumes XP, hosting sessions earns XP. 

@@ -13,7 +13,11 @@ const XPBalanceCard = () => {
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
-              <span className="text-lg">👑</span>
+              <img 
+                src="/lovable-uploads/9246f030-df64-4104-a285-57ba9466318c.png" 
+                alt="XP Coin" 
+                className="w-6 h-6"
+              />
               <span className="font-medium">X.P Balance:</span>
             </div>
             <div className="flex items-center space-x-3">
