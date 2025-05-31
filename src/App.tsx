@@ -13,6 +13,7 @@ import Marketplace from "./pages/Marketplace";
 import Vault from "./pages/Vault";
 import PublicProfile from "./pages/PublicProfile";
 import Community from "./pages/Community";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
