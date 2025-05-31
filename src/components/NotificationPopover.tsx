@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { MessageCircle, CheckCircle, Clock, AlertCircle, X, MoreHorizontal } from 'lucide-react';
+import { MessageCircle, CheckCircle, Clock, AlertCircle, X, MoreHorizontal, Bell } from 'lucide-react';
 import { Button } from './ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from './ui/avatar';
 
