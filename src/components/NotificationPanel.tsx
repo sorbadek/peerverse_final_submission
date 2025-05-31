@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { MessageCircle, CheckCircle, Clock, AlertCircle } from 'lucide-react';
+import { MessageCircle, CheckCircle, Clock, AlertCircle, Users, TrendingUp } from 'lucide-react';
 
 const NotificationPanel = () => {
   const notifications = [
@@ -38,15 +38,42 @@ const NotificationPanel = () => {
     }
   ];
 
-  const avatars = [
-    'bg-gradient-to-r from-red-400 to-pink-400',
-    'bg-gradient-to-r from-blue-400 to-purple-400', 
-    'bg-gradient-to-r from-green-400 to-teal-400',
-    'bg-gradient-to-r from-yellow-400 to-orange-400',
-    'bg-gradient-to-r from-purple-400 to-indigo-400',
-    'bg-gradient-to-r from-pink-400 to-rose-400',
-    'bg-gradient-to-r from-indigo-400 to-blue-400',
-    'bg-gradient-to-r from-teal-400 to-cyan-400'
+  const frequentLearningPartners = [
+    {
+      name: 'Sarah Chen',
+      avatar: 'bg-gradient-to-r from-blue-400 to-purple-400',
+      relationship: 'Learn from',
+      subject: 'React & TypeScript',
+      sessions: 12
+    },
+    {
+      name: 'Mike Rodriguez',
+      avatar: 'bg-gradient-to-r from-green-400 to-teal-400',
+      relationship: 'Teaches you',
+      subject: 'Data Structures',
+      sessions: 8
+    },
+    {
+      name: 'Emma Johnson',
+      avatar: 'bg-gradient-to-r from-purple-400 to-pink-400',
+      relationship: 'Study buddy',
+      subject: 'UI/UX Design',
+      sessions: 15
+    },
+    {
+      name: 'David Park',
+      avatar: 'bg-gradient-to-r from-yellow-400 to-orange-400',
+      relationship: 'Learn from',
+      subject: 'Node.js APIs',
+      sessions: 6
+    },
+    {
+      name: 'Lisa Wang',
+      avatar: 'bg-gradient-to-r from-red-400 to-pink-400',
+      relationship: 'Mutual learning',
+      subject: 'Machine Learning',
+      sessions: 9
+    }
   ];
 
   return (
@@ -68,15 +95,34 @@ const NotificationPanel = () => {
         </div>
       </div>
 
-      {/* User Avatars */}
+      {/* Frequent Learning Partners */}
       <div className="bg-gradient-to-b from-purple-900 to-blue-900 rounded-2xl p-6">
-        <div className="space-y-4">
-          {avatars.map((gradient, index) => (
-            <div key={index} className="flex items-center space-x-3">
-              <div className={`w-12 h-12 ${gradient} rounded-full border-2 border-white/20`}></div>
-              {index === 0 && (
-                <div className="w-8 h-8 bg-yellow-400 rounded-full border-2 border-white/20"></div>
-              )}
+        <div className="flex items-center space-x-2 mb-4">
+          <Users className="w-5 h-5 text-white" />
+          <h3 className="text-white font-semibold">Frequent Learning Partners</h3>
+        </div>
+        <div className="space-y-3">
+          {frequentLearningPartners.map((partner, index) => (
+            <div key={index} className="flex items-center justify-between bg-white/10 rounded-lg p-3 backdrop-blur-sm">
+              <div className="flex items-center space-x-3">
+                <div className={`w-10 h-10 ${partner.avatar} rounded-full border-2 border-white/20 flex items-center justify-center`}>
+                  <span className="text-white text-xs font-bold">
+                    {partner.name.split(' ').map(n => n[0]).join('')}
+                  </span>
+                </div>
+                <div>
+                  <p className="text-white text-sm font-medium">{partner.name}</p>
+                  <p className="text-white/70 text-xs">{partner.relationship}</p>
+                  <p className="text-white/60 text-xs">{partner.subject}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="flex items-center text-yellow-400 text-xs">
+                  <TrendingUp className="w-3 h-3 mr-1" />
+                  <span>{partner.sessions}</span>
+                </div>
+                <p className="text-white/60 text-xs">sessions</p>
+              </div>
             </div>
           ))}
         </div>
