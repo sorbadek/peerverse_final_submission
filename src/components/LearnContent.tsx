@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { Button } from './ui/button';
 import { useToast } from './ui/use-toast';
 import LearningResourceCard from './LearningResourceCard';
+import ContributeResourceModal from './ContributeResourceModal';
 
 interface LearningResource {
   id: number;
@@ -28,6 +30,7 @@ const LearnContent = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLevel, setSelectedLevel] = useState('all');
+  const [isContributeModalOpen, setIsContributeModalOpen] = useState(false);
   const { toast } = useToast();
 
   const handleSaveToVault = (resource: LearningResource) => {
@@ -37,6 +40,10 @@ const LearnContent = () => {
       title: "Saved to Vault",
       description: `"${resource.title}" has been saved to your vault for offline access.`,
     });
+  };
+
+  const handleContributeResource = (newResource: LearningResource) => {
+    setLearningResources(prev => [newResource, ...prev]);
   };
 
   const learningResources: LearningResource[] = [
@@ -145,8 +152,19 @@ const LearnContent = () => {
   return (
     <div className="space-y-6">
       <div className="flex flex-col space-y-4">
-        <h1 className="text-3xl font-bold text-white">Learn</h1>
-        <p className="text-gray-400">Access prerecorded videos, PDFs, and learning resources</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-white">Learn</h1>
+            <p className="text-gray-400">Access prerecorded videos, PDFs, and learning resources</p>
+          </div>
+          <Button
+            onClick={() => setIsContributeModalOpen(true)}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Contribute Resource
+          </Button>
+        </div>
         
         {/* Filters */}
         <div className="flex flex-col lg:flex-row gap-4 bg-gray-900 p-4 rounded-lg">
@@ -259,6 +277,12 @@ const LearnContent = () => {
           <p className="text-gray-400 text-lg">No resources found matching your criteria.</p>
         </div>
       )}
+
+      <ContributeResourceModal
+        isOpen={isContributeModalOpen}
+        onClose={() => setIsContributeModalOpen(false)}
+        onContribute={handleContributeResource}
+      />
     </div>
   );
 };
