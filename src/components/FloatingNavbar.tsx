@@ -16,6 +16,22 @@ const FloatingNavbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    const targetId = href.replace('#', '');
+    const targetElement = document.getElementById(targetId);
+    
+    if (targetElement) {
+      targetElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+    
+    // Close mobile menu if open
+    setIsMobileMenuOpen(false);
+  };
+
   const navItems = [
     { label: 'Home', href: '#home' },
     { label: 'About', href: '#about' },
@@ -52,7 +68,8 @@ const FloatingNavbar = () => {
               <a
                 key={item.label}
                 href={item.href}
-                className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium"
+                onClick={(e) => handleSmoothScroll(e, item.href)}
+                className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer"
               >
                 {item.label}
               </a>
@@ -79,8 +96,8 @@ const FloatingNavbar = () => {
                 <a
                   key={item.label}
                   href={item.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="block px-3 py-2 text-gray-300 hover:text-white transition-colors duration-200"
+                  onClick={(e) => handleSmoothScroll(e, item.href)}
+                  className="block px-3 py-2 text-gray-300 hover:text-white transition-colors duration-200 cursor-pointer"
                 >
                   {item.label}
                 </a>
