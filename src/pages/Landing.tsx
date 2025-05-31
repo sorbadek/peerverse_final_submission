@@ -3,6 +3,7 @@ import React from 'react';
 import { ArrowRight, Play, Users, TrendingUp, BookOpen, Coins, Network, Vote, Globe, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import FloatingNavbar from '@/components/FloatingNavbar';
 
 const Landing = () => {
   const stats = [
@@ -36,9 +37,11 @@ const Landing = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white overflow-hidden">
+    <div className="min-h-screen bg-gray-950 text-white overflow-hidden">
+      <FloatingNavbar />
+      
       {/* Hero Section with Background Video */}
-      <section className="relative h-screen flex items-center justify-center">
+      <section id="home" className="relative h-screen flex items-center justify-center">
         {/* Background Video */}
         <div className="absolute inset-0 z-0">
           <video
@@ -46,23 +49,23 @@ const Landing = () => {
             muted
             loop
             playsInline
-            className="w-full h-full object-cover opacity-30"
+            className="w-full h-full object-cover opacity-20"
           >
             <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/70" />
+          <div className="absolute inset-0 bg-gradient-to-b from-gray-950/70 via-transparent to-gray-950/90" />
         </div>
 
         {/* Hero Content */}
         <div className="relative z-10 text-center max-w-6xl mx-auto px-4 animate-fade-in">
-          <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent leading-tight">
+          <h1 className="text-6xl md:text-8xl font-bold mb-6 bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent leading-tight">
             Pay for Knowledge<br />with Knowledge
           </h1>
           <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
             The first decentralized learning platform where your expertise becomes currency and knowledge flows freely across Africa and beyond
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white px-8 py-4 text-lg">
+            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg">
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button size="lg" variant="outline" className="border-gray-600 text-white hover:bg-gray-800 px-8 py-4 text-lg">
@@ -72,9 +75,9 @@ const Landing = () => {
         </div>
 
         {/* Floating Elements */}
-        <div className="absolute top-20 left-10 w-20 h-20 border border-purple-500/30 rounded-full animate-pulse" />
-        <div className="absolute bottom-20 right-10 w-16 h-16 border border-blue-500/30 rounded-full animate-pulse delay-300" />
-        <div className="absolute top-1/3 right-1/4 w-12 h-12 border border-pink-500/30 rounded-full animate-pulse delay-700" />
+        <div className="absolute top-20 left-10 w-20 h-20 border border-blue-500/30 rounded-full animate-pulse" />
+        <div className="absolute bottom-20 right-10 w-16 h-16 border border-purple-500/30 rounded-full animate-pulse delay-300" />
+        <div className="absolute top-1/3 right-1/4 w-12 h-12 border border-blue-500/30 rounded-full animate-pulse delay-700" />
       </section>
 
       {/* Fluid Shape Divider */}
@@ -102,7 +105,7 @@ const Landing = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             {stats.map((stat, index) => (
               <div key={index} className="animate-fade-in" style={{ animationDelay: `${index * 200}ms` }}>
-                <div className="text-4xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                <div className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   {stat.number}
                 </div>
                 <div className="text-gray-400 mt-2">{stat.label}</div>
@@ -113,7 +116,7 @@ const Landing = () => {
       </section>
 
       {/* What is PeerVerse Section */}
-      <section className="py-20 px-4">
+      <section id="about" className="py-20 px-4">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="animate-fade-in">
@@ -129,8 +132,8 @@ const Landing = () => {
               </p>
             </div>
             <div className="relative">
-              <div className="w-full h-80 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg border border-purple-500/30 flex items-center justify-center">
-                <Network className="h-32 w-32 text-purple-400 animate-pulse" />
+              <div className="w-full h-80 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg border border-blue-500/30 flex items-center justify-center">
+                <Network className="h-32 w-32 text-blue-400 animate-pulse" />
               </div>
             </div>
           </div>
@@ -138,13 +141,13 @@ const Landing = () => {
       </section>
 
       {/* How it Works Section */}
-      <section className="py-20 px-4 bg-gray-900">
+      <section id="features" className="py-20 px-4 bg-gray-900">
         <div className="max-w-6xl mx-auto text-center">
           <div className="grid lg:grid-cols-4 gap-8">
             {howItWorksCards.map((card, index) => (
-              <Card key={index} className="bg-gray-800 border-gray-700 hover:border-purple-500/50 transition-all duration-300 hover:scale-105">
+              <Card key={index} className="bg-gray-800 border-gray-700 hover:border-blue-500/50 transition-all duration-300 hover:scale-105">
                 <CardContent className="p-6 text-center">
-                  <div className="text-purple-400 mb-4 flex justify-center">
+                  <div className="text-blue-400 mb-4 flex justify-center">
                     {card.icon}
                   </div>
                   <h3 className="text-xl font-semibold mb-3 text-white">{card.title}</h3>
@@ -170,10 +173,10 @@ const Landing = () => {
             <div className="bg-gray-800 rounded-lg p-8">
               <div className="flex justify-between items-center mb-4">
                 <span className="text-white font-semibold">Your XP Balance</span>
-                <span className="text-purple-400 font-bold text-xl">2,847 XP</span>
+                <span className="text-blue-400 font-bold text-xl">2,847 XP</span>
               </div>
               <div className="w-full bg-gray-700 rounded-full h-4 mb-4">
-                <div className="bg-gradient-to-r from-purple-500 to-pink-500 h-4 rounded-full animate-pulse" style={{ width: '68%' }}></div>
+                <div className="bg-gradient-to-r from-blue-500 to-purple-500 h-4 rounded-full animate-pulse" style={{ width: '68%' }}></div>
               </div>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div className="text-green-400">
@@ -195,8 +198,8 @@ const Landing = () => {
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative">
-              <div className="w-full h-80 bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg border border-blue-500/30 flex items-center justify-center">
-                <BookOpen className="h-32 w-32 text-blue-400 animate-pulse" />
+              <div className="w-full h-80 bg-gradient-to-br from-purple-500/20 to-blue-500/20 rounded-lg border border-purple-500/30 flex items-center justify-center">
+                <BookOpen className="h-32 w-32 text-purple-400 animate-pulse" />
               </div>
             </div>
             <div>
@@ -226,14 +229,14 @@ const Landing = () => {
           <div className="grid md:grid-cols-3 gap-8">
             <Card className="bg-gray-800 border-gray-700">
               <CardContent className="p-6 text-center">
-                <Users className="h-12 w-12 text-purple-400 mx-auto mb-4" />
+                <Users className="h-12 w-12 text-blue-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-3 text-white">Verified Skills</h3>
                 <p className="text-gray-400">Every skill is backed by verifiable learning history and peer validation</p>
               </CardContent>
             </Card>
             <Card className="bg-gray-800 border-gray-700">
               <CardContent className="p-6 text-center">
-                <Network className="h-12 w-12 text-blue-400 mx-auto mb-4" />
+                <Network className="h-12 w-12 text-purple-400 mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-3 text-white">Transparent Reputation</h3>
                 <p className="text-gray-400">Build your reputation through teaching, learning, and community contribution</p>
               </CardContent>
@@ -250,7 +253,7 @@ const Landing = () => {
       </section>
 
       {/* Community DAO Section */}
-      <section className="py-20 px-4 bg-gray-900">
+      <section id="community" className="py-20 px-4 bg-gray-900">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -285,12 +288,12 @@ const Landing = () => {
           </p>
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             <div className="text-center">
-              <Globe className="h-16 w-16 text-purple-400 mx-auto mb-4" />
+              <Globe className="h-16 w-16 text-blue-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Global Reach</h3>
               <p className="text-gray-400">Connect with learners worldwide</p>
             </div>
             <div className="text-center">
-              <Users className="h-16 w-16 text-blue-400 mx-auto mb-4" />
+              <Users className="h-16 w-16 text-purple-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Local Impact</h3>
               <p className="text-gray-400">Solve Africa's education challenges</p>
             </div>
@@ -300,7 +303,7 @@ const Landing = () => {
               <p className="text-gray-400">Create opportunities and wealth</p>
             </div>
             <div className="text-center">
-              <Network className="h-16 w-16 text-pink-400 mx-auto mb-4" />
+              <Network className="h-16 w-16 text-blue-400 mx-auto mb-4" />
               <h3 className="text-xl font-semibold text-white mb-2">Knowledge Bridge</h3>
               <p className="text-gray-400">Bridge the global knowledge gap</p>
             </div>
@@ -309,7 +312,7 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-purple-900 via-pink-900 to-blue-900">
+      <section className="py-20 px-4 bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-6xl font-bold mb-6">Africa's Learning Revolution Starts with You</h2>
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">
@@ -328,9 +331,9 @@ const Landing = () => {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 px-4 bg-black border-t border-gray-800">
+      <footer className="py-12 px-4 bg-gray-950 border-t border-gray-800">
         <div className="max-w-6xl mx-auto text-center">
-          <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
             PeerVerse
           </h3>
           <p className="text-gray-400 mb-6">Decentralized Learning. Verified Knowledge. Infinite Possibilities.</p>
