@@ -11,6 +11,7 @@ import TutorHub from "./pages/TutorHub";
 import Marketplace from "./pages/Marketplace";
 import Vault from "./pages/Vault";
 import PublicProfile from "./pages/PublicProfile";
+import Community from "./pages/Community";
 import NotFound from "./pages/NotFound";
 
 const App = () => {
@@ -29,6 +30,7 @@ const App = () => {
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/vault" element={<Vault />} />
             <Route path="/public-profile" element={<PublicProfile />} />
+            <Route path="/community" element={<Community />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
