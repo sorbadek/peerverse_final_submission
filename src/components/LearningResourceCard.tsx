@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Play, FileText, Clock, Star, Users, File, Bookmark } from 'lucide-react';
 import { Button } from './ui/button';
@@ -24,9 +23,10 @@ interface LearningResource {
 interface LearningResourceCardProps {
   resource: LearningResource;
   onSaveToVault?: (resource: LearningResource) => void;
+  onComplete?: (resource: LearningResource) => void;
 }
 
-const LearningResourceCard = ({ resource, onSaveToVault }: LearningResourceCardProps) => {
+const LearningResourceCard = ({ resource, onSaveToVault, onComplete }: LearningResourceCardProps) => {
   const getTypeIcon = () => {
     switch (resource.type) {
       case 'video':
@@ -69,6 +69,12 @@ const LearningResourceCard = ({ resource, onSaveToVault }: LearningResourceCardP
   const handleSaveToVault = () => {
     if (onSaveToVault) {
       onSaveToVault(resource);
+    }
+  };
+
+  const handleComplete = () => {
+    if (onComplete) {
+      onComplete(resource);
     }
   };
 
@@ -142,13 +148,21 @@ const LearningResourceCard = ({ resource, onSaveToVault }: LearningResourceCardP
           )}
         </div>
         
-        <Button 
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-          onClick={handleSaveToVault}
-        >
-          <Bookmark className="w-4 h-4 mr-2" />
-          Save to Vault
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+            onClick={handleSaveToVault}
+          >
+            <Bookmark className="w-4 h-4 mr-2" />
+            Save to Vault
+          </Button>
+          <Button 
+            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
+            onClick={handleComplete}
+          >
+            Complete
+          </Button>
+        </div>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Users, Clock, Star, Play } from 'lucide-react';
+import { Users, Clock, Star, Play, CheckCircle } from 'lucide-react';
 import { Button } from './ui/button';
 import { useSession } from './SessionManager';
 import { toast } from '@/hooks/use-toast';
@@ -18,9 +18,10 @@ interface OngoingSession {
 
 interface OngoingSessionCardProps {
   session: OngoingSession;
+  onComplete?: (session: OngoingSession) => void;
 }
 
-const OngoingSessionCard = ({ session }: OngoingSessionCardProps) => {
+const OngoingSessionCard = ({ session, onComplete }: OngoingSessionCardProps) => {
   const { startSession } = useSession();
 
   const generateRoomName = (sessionId: string) => {
@@ -49,6 +50,12 @@ const OngoingSessionCard = ({ session }: OngoingSessionCardProps) => {
     });
 
     console.log(`Joining session: ${session.id} in room: ${roomName}`);
+  };
+
+  const handleCompleteSession = () => {
+    if (onComplete) {
+      onComplete(session);
+    }
   };
 
   return (
@@ -95,13 +102,23 @@ const OngoingSessionCard = ({ session }: OngoingSessionCardProps) => {
           </div>
         </div>
 
-        <Button 
-          onClick={handleJoinSession}
-          className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
-        >
-          <Play className="mr-2 h-4 w-4" />
-          Join Session
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            onClick={handleJoinSession}
+            className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white"
+          >
+            <Play className="mr-2 h-4 w-4" />
+            Join Session
+          </Button>
+          <Button 
+            onClick={handleCompleteSession}
+            variant="outline"
+            className="border-gray-600 text-white hover:bg-gray-600"
+          >
+            <CheckCircle className="mr-2 h-4 w-4" />
+            Complete
+          </Button>
+        </div>
       </div>
     </div>
   );
