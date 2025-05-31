@@ -34,6 +34,7 @@ const App = () => {
               <Route path="/vault" element={<Vault />} />
               <Route path="/public-profile" element={<PublicProfile />} />
               <Route path="/community" element={<Community />} />
+              <Route path="/settings" element={<Settings />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
