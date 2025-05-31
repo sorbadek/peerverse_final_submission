@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Bell, Sun, Menu, ChevronDown } from 'lucide-react';
+import React from 'react';
+import { Bell, Sun, Menu } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import NotificationPopover from './NotificationPopover';
 
@@ -9,8 +9,6 @@ interface HeaderProps {
 }
 
 const Header = ({ onMenuClick }: HeaderProps) => {
-  const [profileOpen, setProfileOpen] = useState(false);
-
   return (
     <header className="bg-black border-b border-gray-800 px-4 lg:px-6 py-4">
       <div className="flex items-center justify-between">
@@ -42,26 +40,6 @@ const Header = ({ onMenuClick }: HeaderProps) => {
               <NotificationPopover />
             </PopoverContent>
           </Popover>
-          
-          <div className="relative">
-            <button
-              onClick={() => setProfileOpen(!profileOpen)}
-              className="flex items-center space-x-2 text-white hover:bg-gray-800 rounded-lg p-2"
-            >
-              <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></div>
-              <span className="text-sm hidden sm:block">Sandro Williams</span>
-              <ChevronDown size={16} className="hidden sm:block" />
-            </button>
-            
-            {profileOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-lg z-50">
-                <div className="p-2">
-                  <a href="#" className="block px-4 py-2 text-white hover:bg-gray-700 rounded">Profile</a>
-                  <a href="#" className="block px-4 py-2 text-white hover:bg-gray-700 rounded">Logout</a>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </header>
