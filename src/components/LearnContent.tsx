@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { useToast } from './ui/use-toast';
 import LearningResourceCard from './LearningResourceCard';
 
 interface LearningResource {
@@ -28,6 +28,16 @@ const LearnContent = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLevel, setSelectedLevel] = useState('all');
+  const { toast } = useToast();
+
+  const handleSaveToVault = (resource: LearningResource) => {
+    // Here you would typically save to a backend or local storage
+    // For now, we'll just show a success message
+    toast({
+      title: "Saved to Vault",
+      description: `"${resource.title}" has been saved to your vault for offline access.`,
+    });
+  };
 
   const learningResources: LearningResource[] = [
     {
@@ -198,7 +208,11 @@ const LearnContent = () => {
         <TabsContent value="all" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredResources.map(resource => (
-              <LearningResourceCard key={resource.id} resource={resource} />
+              <LearningResourceCard 
+                key={resource.id} 
+                resource={resource} 
+                onSaveToVault={handleSaveToVault}
+              />
             ))}
           </div>
         </TabsContent>
@@ -206,7 +220,11 @@ const LearnContent = () => {
         <TabsContent value="videos" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {videoResources.map(resource => (
-              <LearningResourceCard key={resource.id} resource={resource} />
+              <LearningResourceCard 
+                key={resource.id} 
+                resource={resource} 
+                onSaveToVault={handleSaveToVault}
+              />
             ))}
           </div>
         </TabsContent>
@@ -214,7 +232,11 @@ const LearnContent = () => {
         <TabsContent value="pdfs" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {pdfResources.map(resource => (
-              <LearningResourceCard key={resource.id} resource={resource} />
+              <LearningResourceCard 
+                key={resource.id} 
+                resource={resource} 
+                onSaveToVault={handleSaveToVault}
+              />
             ))}
           </div>
         </TabsContent>
@@ -222,7 +244,11 @@ const LearnContent = () => {
         <TabsContent value="files" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {fileResources.map(resource => (
-              <LearningResourceCard key={resource.id} resource={resource} />
+              <LearningResourceCard 
+                key={resource.id} 
+                resource={resource} 
+                onSaveToVault={handleSaveToVault}
+              />
             ))}
           </div>
         </TabsContent>

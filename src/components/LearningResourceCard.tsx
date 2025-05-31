@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Play, FileText, Download, Clock, Star, Users, File } from 'lucide-react';
+import { Play, FileText, Clock, Star, Users, File, Bookmark } from 'lucide-react';
 import { Button } from './ui/button';
 
 interface LearningResource {
@@ -23,9 +23,10 @@ interface LearningResource {
 
 interface LearningResourceCardProps {
   resource: LearningResource;
+  onSaveToVault?: (resource: LearningResource) => void;
 }
 
-const LearningResourceCard = ({ resource }: LearningResourceCardProps) => {
+const LearningResourceCard = ({ resource, onSaveToVault }: LearningResourceCardProps) => {
   const getTypeIcon = () => {
     switch (resource.type) {
       case 'video':
@@ -62,6 +63,12 @@ const LearningResourceCard = ({ resource }: LearningResourceCardProps) => {
         return 'bg-red-500';
       default:
         return 'bg-gray-500';
+    }
+  };
+
+  const handleSaveToVault = () => {
+    if (onSaveToVault) {
+      onSaveToVault(resource);
     }
   };
 
@@ -135,9 +142,12 @@ const LearningResourceCard = ({ resource }: LearningResourceCardProps) => {
           )}
         </div>
         
-        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-          <Download className="w-4 h-4 mr-2" />
-          {resource.type === 'video' ? 'Watch Now' : 'Download'}
+        <Button 
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          onClick={handleSaveToVault}
+        >
+          <Bookmark className="w-4 h-4 mr-2" />
+          Save to Vault
         </Button>
       </div>
     </div>
