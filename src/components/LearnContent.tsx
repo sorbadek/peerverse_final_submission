@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Search, Plus } from 'lucide-react';
 import { Input } from './ui/input';
@@ -8,6 +7,8 @@ import { Button } from './ui/button';
 import { useToast } from './ui/use-toast';
 import LearningResourceCard from './LearningResourceCard';
 import ContributeResourceModal from './ContributeResourceModal';
+import CertificateNotification from './CertificateNotification';
+import { useCertificates } from '../hooks/useCertificates';
 
 interface LearningResource {
   id: number;
@@ -32,6 +33,8 @@ const LearnContent = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedLevel, setSelectedLevel] = useState('all');
   const [isContributeModalOpen, setIsContributeModalOpen] = useState(false);
+  const [showCertificateNotification, setShowCertificateNotification] = useState(false);
+  const [newCertificate, setNewCertificate] = useState(null);
   const [learningResources, setLearningResources] = useState<LearningResource[]>([
     {
       id: 1,
@@ -119,6 +122,7 @@ const LearnContent = () => {
     }
   ]);
   const { toast } = useToast();
+  const { issueCertificate } = useCertificates();
 
   const handleSaveToVault = (resource: LearningResource) => {
     // Here you would typically save to a backend or local storage
@@ -127,6 +131,36 @@ const LearnContent = () => {
       title: "Saved to Vault",
       description: `"${resource.title}" has been saved to your vault for offline access.`,
     });
+  };
+
+  const handleResourceCompletion = (resource: LearningResource) => {
+    // Calculate XP based on resource type and difficulty
+    let xpEarned = 100; // Base XP
+    if (resource.level === 'Intermediate') xpEarned = 150;
+    if (resource.level === 'Advanced') xpEarned = 200;
+    if (resource.type === 'video') xpEarned += 50;
+
+    // Issue certificate for completed resource
+    const certificate = issueCertificate({
+      title: resource.title,
+      type: 'resource',
+      issuer: 'PeerVerse Learning',
+      resourceType: resource.type,
+      xpEarned
+    });
+
+    setNewCertificate(certificate);
+    setShowCertificateNotification(true);
+
+    toast({
+      title: "Resource Completed!",
+      description: `You've earned a certificate for "${resource.title}" and gained ${xpEarned} XP!`,
+    });
+
+    // Auto-hide notification after 5 seconds
+    setTimeout(() => {
+      setShowCertificateNotification(false);
+    }, 5000);
   };
 
   const handleContributeResource = (newResource: LearningResource) => {
@@ -151,6 +185,14 @@ const LearnContent = () => {
 
   return (
     <div className="space-y-6">
+      {/* Certificate Notification */}
+      {showCertificateNotification && newCertificate && (
+        <CertificateNotification
+          certificate={newCertificate}
+          onClose={() => setShowCertificateNotification(false)}
+        />
+      )}
+
       <div className="flex flex-col space-y-4">
         <div className="flex items-center justify-between">
           <div>
@@ -230,6 +272,7 @@ const LearnContent = () => {
                 key={resource.id} 
                 resource={resource} 
                 onSaveToVault={handleSaveToVault}
+                onComplete={handleResourceCompletion}
               />
             ))}
           </div>
@@ -242,6 +285,7 @@ const LearnContent = () => {
                 key={resource.id} 
                 resource={resource} 
                 onSaveToVault={handleSaveToVault}
+                onComplete={handleResourceCompletion}
               />
             ))}
           </div>
@@ -254,6 +298,7 @@ const LearnContent = () => {
                 key={resource.id} 
                 resource={resource} 
                 onSaveToVault={handleSaveToVault}
+                onComplete={handleResourceCompletion}
               />
             ))}
           </div>
@@ -266,6 +311,7 @@ const LearnContent = () => {
                 key={resource.id} 
                 resource={resource} 
                 onSaveToVault={handleSaveToVault}
+                onComplete={handleResourceCompletion}
               />
             ))}
           </div>

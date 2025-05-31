@@ -4,13 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Star, Users, Award, BookOpen, Download, Share2, CheckCircle } from 'lucide-react';
+import { Star, Users, Award, BookOpen, Share2 } from 'lucide-react';
+import { useCertificates } from '../hooks/useCertificates';
+import CertificateCard from './CertificateCard';
 
 interface PublicProfileContentProps {
   isOwnProfile?: boolean;
 }
 
 const PublicProfileContent = ({ isOwnProfile = true }: PublicProfileContentProps) => {
+  const { certificates, isLoading } = useCertificates();
+
   // User data that would come from settings
   const userSettings = {
     name: 'Sandro Williams',
@@ -26,47 +30,18 @@ const PublicProfileContent = ({ isOwnProfile = true }: PublicProfileContentProps
     { id: 4, title: 'Session Regular', icon: '⭐', earned: '2024-03-25', description: 'Attended 25+ learning sessions' }
   ];
 
-  // Auto-generated certificates based on completed learning paths
-  const completedCourses = [
-    {
-      id: 1,
-      title: 'Sui Move Programming Fundamentals',
-      issuer: 'PeerVerse',
-      completedDate: '2024-03-20',
-      certificateId: 'PV-SUI-2024-001',
-      verifiable: true,
-      xpEarned: 500
-    },
-    {
-      id: 2,
-      title: 'zkLogin Integration Mastery',
-      issuer: 'PeerVerse',
-      completedDate: '2024-02-15',
-      certificateId: 'PV-ZK-2024-002',
-      verifiable: true,
-      xpEarned: 350
-    },
-    {
-      id: 3,
-      title: 'DeFi on Sui Blockchain',
-      issuer: 'PeerVerse',
-      completedDate: '2024-01-30',
-      certificateId: 'PV-DEFI-2024-003',
-      verifiable: true,
-      xpEarned: 600
-    }
-  ];
-
   // Auto-calculated activity stats based on user engagement
+  const totalXPFromCertificates = certificates.reduce((total, cert) => total + cert.xpEarned, 0);
   const activityStats = {
-    xpBalance: completedCourses.reduce((total, course) => total + course.xpEarned, 0) + 1000, // Base + earned
+    xpBalance: totalXPFromCertificates + 1000, // Base + earned from certificates
     peersConnected: 156,
-    coursesCompleted: completedCourses.length,
+    coursesCompleted: certificates.filter(cert => cert.type === 'resource').length,
     badgesEarned: achievements.length,
     sessionsHosted: 23,
     materialsShared: 15,
     questionsAnswered: 87,
-    peerRating: 4.9
+    peerRating: 4.9,
+    certificatesEarned: certificates.length
   };
 
   return (
@@ -97,8 +72,8 @@ const PublicProfileContent = ({ isOwnProfile = true }: PublicProfileContentProps
                   <div className="text-sm text-gray-400">Peers</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-purple-400">{activityStats.coursesCompleted}</div>
-                  <div className="text-sm text-gray-400">Courses</div>
+                  <div className="text-2xl font-bold text-purple-400">{activityStats.certificatesEarned}</div>
+                  <div className="text-sm text-gray-400">Certificates</div>
                 </div>
                 <div className="text-center">
                   <div className="text-2xl font-bold text-yellow-400">{activityStats.badgesEarned}</div>
@@ -149,40 +124,32 @@ const PublicProfileContent = ({ isOwnProfile = true }: PublicProfileContentProps
             </CardContent>
           </Card>
 
-          {/* Completed Courses & Certificates */}
+          {/* Earned Certificates */}
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="text-white flex items-center">
                 <BookOpen className="w-5 h-5 mr-2 text-blue-500" />
-                Sui Blockchain Certificates
+                Earned Certificates ({certificates.length})
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {completedCourses.map((course) => (
-                  <div key={course.id} className="p-4 bg-gray-700 rounded-lg">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <h3 className="font-medium text-white mb-1">{course.title}</h3>
-                        <p className="text-sm text-gray-400 mb-2">Issued by {course.issuer} • {course.xpEarned} XP earned</p>
-                        <div className="flex items-center space-x-4 text-xs text-gray-400">
-                          <span>Completed: {new Date(course.completedDate).toLocaleDateString()}</span>
-                          <span>ID: {course.certificateId}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        {course.verifiable && (
-                          <CheckCircle className="w-5 h-5 text-green-500" />
-                        )}
-                        <Button size="sm" variant="outline" className="border-gray-600 text-white hover:bg-gray-600">
-                          <Download className="w-4 h-4 mr-1" />
-                          Verify
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              {isLoading ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-400">Loading certificates...</div>
+                </div>
+              ) : certificates.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {certificates.map((certificate) => (
+                    <CertificateCard key={certificate.id} certificate={certificate} />
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-400">No certificates earned yet</p>
+                  <p className="text-gray-500 text-sm mt-2">Complete learning resources or sessions to earn certificates!</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

@@ -6,6 +6,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import OngoingSessionCard from './OngoingSessionCard';
 import HostSessionDialog from './HostSessionDialog';
 import XPContributionTracker from './XPContributionTracker';
+import CertificateNotification from './CertificateNotification';
+import { useCertificates } from '../hooks/useCertificates';
+import { useToast } from './ui/use-toast';
 
 interface OngoingSession {
   id: string;
@@ -22,6 +25,11 @@ const TutorHubContent = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showHostDialog, setShowHostDialog] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [showCertificateNotification, setShowCertificateNotification] = useState(false);
+  const [newCertificate, setNewCertificate] = useState(null);
+  
+  const { issueCertificate } = useCertificates();
+  const { toast } = useToast();
 
   const ongoingSessions: OngoingSession[] = [
     {
@@ -66,6 +74,34 @@ const TutorHubContent = () => {
     }
   ];
 
+  const handleSessionCompletion = (session: OngoingSession) => {
+    // Calculate XP based on session duration and type
+    const durationMinutes = parseInt(session.duration);
+    let xpEarned = Math.max(50, Math.floor(durationMinutes * 2)); // Base 2 XP per minute, minimum 50
+
+    // Issue certificate for completed session
+    const certificate = issueCertificate({
+      title: `${session.title} - Session Completion`,
+      type: 'session',
+      issuer: 'PeerVerse Community',
+      sessionDuration: session.duration,
+      xpEarned
+    });
+
+    setNewCertificate(certificate);
+    setShowCertificateNotification(true);
+
+    toast({
+      title: "Session Completed!",
+      description: `You've earned a certificate for "${session.title}" and gained ${xpEarned} XP!`,
+    });
+
+    // Auto-hide notification after 5 seconds
+    setTimeout(() => {
+      setShowCertificateNotification(false);
+    }, 5000);
+  };
+
   const categories = ['all', 'Frontend', 'Backend', 'Design', 'Computer Science', 'Mobile'];
 
   const filteredSessions = ongoingSessions.filter(session => {
@@ -78,6 +114,14 @@ const TutorHubContent = () => {
 
   return (
     <div className="space-y-6">
+      {/* Certificate Notification */}
+      {showCertificateNotification && newCertificate && (
+        <CertificateNotification
+          certificate={newCertificate}
+          onClose={() => setShowCertificateNotification(false)}
+        />
+      )}
+
       {/* Header Section */}
       <div className="flex flex-col space-y-4">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
@@ -147,7 +191,11 @@ const TutorHubContent = () => {
         <TabsContent value="ongoing" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredSessions.map(session => (
-              <OngoingSessionCard key={session.id} session={session} />
+              <OngoingSessionCard 
+                key={session.id} 
+                session={session}
+                onComplete={handleSessionCompletion}
+              />
             ))}
           </div>
           
