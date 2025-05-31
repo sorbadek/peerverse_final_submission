@@ -16,7 +16,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
   const { logout } = useAuth();
 
   const mainMenuItems = [
-    { icon: Home, label: 'Dashboard', path: '/' },
+    { icon: Home, label: 'Dashboard', path: '/dashboard' },
     { icon: BookOpen, label: 'Learn', path: '/learn' },
     { icon: Users, label: 'Tutor Hub', path: '/tutor-hub' },
     { icon: MessageSquare, label: 'Community', path: '/community' },
