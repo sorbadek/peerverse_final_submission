@@ -1,6 +1,8 @@
 
 import React, { useState } from 'react';
 import { Bell, Sun, Menu, ChevronDown } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import NotificationPopover from './NotificationPopover';
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -27,14 +29,19 @@ const Header = ({ onMenuClick }: HeaderProps) => {
             <Sun size={20} />
           </button>
           
-          <div className="relative">
-            <button className="text-white p-2 hover:bg-gray-800 rounded-lg relative">
-              <Bell size={20} />
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                1
-              </span>
-            </button>
-          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <button className="text-white p-2 hover:bg-gray-800 rounded-lg relative">
+                <Bell size={20} />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                  3
+                </span>
+              </button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80 p-0 bg-gray-900 border-gray-700" align="end">
+              <NotificationPopover />
+            </PopoverContent>
+          </Popover>
           
           <div className="relative">
             <button
