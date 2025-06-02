@@ -194,7 +194,6 @@ const TutorHubContent = () => {
               <OngoingSessionCard 
                 key={session.id} 
                 session={session}
-                onComplete={handleSessionCompletion}
               />
             ))}
           </div>

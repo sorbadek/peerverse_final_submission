@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Play, FileText, Clock, Star, Users, File, Bookmark } from 'lucide-react';
 import { Button } from './ui/button';
@@ -72,12 +73,6 @@ const LearningResourceCard = ({ resource, onSaveToVault, onComplete }: LearningR
     }
   };
 
-  const handleComplete = () => {
-    if (onComplete) {
-      onComplete(resource);
-    }
-  };
-
   return (
     <div className="bg-gray-900 rounded-lg overflow-hidden hover:bg-gray-800 transition-colors">
       <div className="relative">
@@ -148,21 +143,13 @@ const LearningResourceCard = ({ resource, onSaveToVault, onComplete }: LearningR
           )}
         </div>
         
-        <div className="flex gap-2">
-          <Button 
-            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-            onClick={handleSaveToVault}
-          >
-            <Bookmark className="w-4 h-4 mr-2" />
-            Save to Vault
-          </Button>
-          <Button 
-            className="flex-1 bg-green-600 hover:bg-green-700 text-white"
-            onClick={handleComplete}
-          >
-            Complete
-          </Button>
-        </div>
+        <Button 
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          onClick={handleSaveToVault}
+        >
+          <Bookmark className="w-4 h-4 mr-2" />
+          Save to Vault
+        </Button>
       </div>
     </div>
   );
