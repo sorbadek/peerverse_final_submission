@@ -4,11 +4,16 @@ import { Button } from './ui/button';
 import { Badge } from './ui/badge';
 import { Star, Upload, FileText, Users, Award, Eye, Share2, Filter, Search, TrendingUp, Clock, Bookmark, Heart, MessageSquare, Shield, Zap, Trophy, File, Video, Image, Music, Archive, Code, Clock3, Calendar, MapPin } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { useNavigate } from 'react-router-dom';
+import TalentChatModal from './TalentChatModal';
 
 const MarketplaceContent = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('materials');
   const [filterCategory, setFilterCategory] = useState('all');
   const [sortBy, setSortBy] = useState('trending');
+  const [selectedTalent, setSelectedTalent] = useState(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const categories = ['all', 'Programming', 'AI/ML', 'Design', 'Business', 'Science', 'Mathematics'];
   const sortOptions = [
@@ -346,6 +351,11 @@ const MarketplaceContent = () => {
     filterCategory === 'all' || material.category === filterCategory
   );
 
+  const openChat = (talent: any) => {
+    setSelectedTalent(talent);
+    setIsChatOpen(true);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -353,7 +363,10 @@ const MarketplaceContent = () => {
           <h1 className="text-3xl font-bold text-white mb-2">Marketplace</h1>
           <p className="text-gray-400">Share knowledge and connect with talented peers through XP-based contributions</p>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        <Button 
+          onClick={() => navigate('/upload-material')}
+          className="bg-blue-600 hover:bg-blue-700"
+        >
           <Upload className="w-4 h-4 mr-2" />
           Share Material
         </Button>
@@ -498,7 +511,7 @@ const MarketplaceContent = () => {
         </div>
       )}
 
-      {/* Enhanced Talents Tab - Keep existing */}
+      {/* Enhanced Talents Tab with Chat */}
       {activeTab === 'talents' && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {talents.map((talent) => (
@@ -589,7 +602,12 @@ const MarketplaceContent = () => {
                   <Button className="flex-1 bg-blue-600 hover:bg-blue-700" size="sm">
                     View Profile
                   </Button>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => openChat(talent)}
+                    className="border-gray-600 hover:bg-gray-700"
+                  >
                     <MessageSquare className="w-4 h-4" />
                   </Button>
                 </div>
@@ -598,6 +616,13 @@ const MarketplaceContent = () => {
           ))}
         </div>
       )}
+
+      {/* Chat Modal */}
+      <TalentChatModal
+        talent={selectedTalent}
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+      />
     </div>
   );
 };

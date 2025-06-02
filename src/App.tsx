@@ -4,47 +4,48 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useState } from "react";
-import { AuthProvider } from "./contexts/AuthContext";
-import Landing from "./pages/Landing";
+import { AuthProvider } from './contexts/AuthContext';
+import { SocialProvider } from './components/SocialContext';
 import Index from "./pages/Index";
+import Landing from "./pages/Landing";
 import Learn from "./pages/Learn";
 import TutorHub from "./pages/TutorHub";
-import Marketplace from "./pages/Marketplace";
-import Vault from "./pages/Vault";
-import PublicProfile from "./pages/PublicProfile";
 import Community from "./pages/Community";
+import Marketplace from "./pages/Marketplace";
+import UploadMaterial from "./pages/UploadMaterial";
+import Vault from "./pages/Vault";
 import Settings from "./pages/Settings";
+import PublicProfile from "./pages/PublicProfile";
 import NotFound from "./pages/NotFound";
 
-const App = () => {
-  const [queryClient] = useState(() => new QueryClient());
+const queryClient = new QueryClient();
 
-  return (
-    <QueryClientProvider client={queryClient}>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <BrowserRouter>
       <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
+        <SocialProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/dashboard" element={<Index />} />
               <Route path="/learn" element={<Learn />} />
               <Route path="/tutor-hub" element={<TutorHub />} />
-              <Route path="/marketplace" element={<Marketplace />} />
-              <Route path="/vault" element={<Vault />} />
-              <Route path="/public-profile" element={<PublicProfile />} />
               <Route path="/community" element={<Community />} />
+              <Route path="/marketplace" element={<Marketplace />} />
+              <Route path="/upload-material" element={<UploadMaterial />} />
+              <Route path="/vault" element={<Vault />} />
               <Route path="/settings" element={<Settings />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="/profile/:userId" element={<PublicProfile />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
+          </TooltipProvider>
+        </SocialProvider>
       </AuthProvider>
-    </QueryClientProvider>
-  );
-};
+    </BrowserRouter>
+  </QueryClientProvider>
+);
 
 export default App;
