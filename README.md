@@ -1,73 +1,89 @@
-# Welcome to your Lovable project
+# PeerVerse
 
-## Project info
+A modern, Vite-powered React web application inspired by the Color Echo concept. This project features a modular architecture, fast development workflow, and is optimized for deployment on Vercel.
 
-**URL**: https://lovable.dev/projects/cd40fbd5-6285-4395-bfa5-577a17e7ca79
+## Features
+- ⚡️ Built with [Vite](https://vitejs.dev/) for lightning-fast development and builds
+- ⚛️ Uses [React](https://react.dev/) with SWC for high performance
+- 🎨 Modular component structure in `src/components`
+- 🛠️ TypeScript for type safety
+- 💨 [Tailwind CSS](https://tailwindcss.com/) for rapid UI development
+- 🔒 Protected routes and authentication context
+- 📈 Analytics, notifications, and social features
+- 🚀 Ready for deployment on Vercel
 
-## How can I edit this code?
+## Getting Started
 
-There are several ways of editing your application.
+### Prerequisites
+- [Node.js](https://nodejs.org/) (v18+ recommended)
+- [pnpm](https://pnpm.io/) or [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
 
-**Use Lovable**
+### Installation
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/60092292-e829-479b-8329-3bd30ce4ed47) and start prompting.
+1. Clone the repository:
+   ```sh
+   git clone <repo-url>
+   cd color-echo-clone-10
+   ```
+2. Install dependencies:
+   ```sh
+   pnpm install
+   # or
+   npm install
+   # or
+   yarn install
+   ```
 
-Changes made via Lovable will be committed automatically to this repo.
+### Development
 
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
+Start the development server:
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+pnpm dev
+# or
 npm run dev
+# or
+yarn dev
+```
+The app will be available at [http://localhost:8080](http://localhost:8080).
+
+### Build
+
+To build the app for production:
+```sh
+pnpm build
+# or
+npm run build
+# or
+yarn build
+```
+The output will be in the `dist/` directory, ready for deployment.
+
+### Deployment
+
+This project is configured for seamless deployment on [Vercel](https://vercel.com/). The `vercel.json` and Vite config ensure correct routing and static file serving.
+
+## Project Structure
+
+```
+color-echo-clone-10/
+├── public/           # Static assets
+├── src/              # Source code
+│   ├── components/   # React components
+│   ├── contexts/     # React contexts
+│   ├── hooks/        # Custom hooks
+│   ├── lib/          # Utilities
+│   └── pages/        # Page components
+├── index.html        # Main HTML file
+├── vite.config.ts    # Vite configuration
+├── tailwind.config.ts# Tailwind CSS config
+├── vercel.json       # Vercel deployment config
+└── ...
 ```
 
-**Edit a file directly in GitHub**
+## Contributing
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Contributions are welcome! Please open issues or pull requests for improvements or bug fixes.
 
-**Use GitHub Codespaces**
+## License
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/60092292-e829-479b-8329-3bd30ce4ed47) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+[MIT](LICENSE)
