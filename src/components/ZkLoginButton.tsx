@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Button } from './ui/button';
 import { Shield, Loader2 } from 'lucide-react';
-import { useZkLogin } from '../contexts/ZkLoginContext';
+import { useZkLogin } from '../hooks/useZkLogin';
 
 interface ZkLoginButtonProps {
   variant?: 'default' | 'outline' | 'ghost';

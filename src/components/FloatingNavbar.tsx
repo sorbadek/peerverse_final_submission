@@ -50,13 +50,13 @@ const FloatingNavbar = () => {
           {/* Logo Section */}
           <div className="flex items-center space-x-4">
             <img 
-              src="/lovable-uploads/51eb3693-5839-4ffb-b4d9-304c31db9ca5.png" 
+              src="/image/51eb3693-5839-4ffb-b4d9-304c31db9ca5.png" 
               alt="PeerVerse Logo" 
               className="h-8 w-auto"
             />
             <div className="h-6 w-px bg-gray-600" />
             <img 
-              src="/lovable-uploads/a6bb7655-4e6b-43a3-a684-02fb8f7f78b7.png" 
+              src="/image/white-sui-logo.png" 
               alt="Sui On Campus Logo" 
               className="h-6 w-auto"
             />

@@ -9,7 +9,7 @@ const ContinueLearning = () => {
       author: "Mohammad Shams Tabrez",
       role: "UI / UX Designer",
       level: "BEGINNER",
-      image: "/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
+      image: "/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
       progress: 0,
       bgColor: "bg-gradient-to-br from-purple-500 to-pink-500"
     },
@@ -18,7 +18,7 @@ const ContinueLearning = () => {
       author: "Sarah Johnson",
       role: "Frontend Developer", 
       level: "INTERMEDIATE",
-      image: "/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
+      image: "/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
       progress: 45,
       bgColor: "bg-gradient-to-br from-orange-400 to-yellow-500"
     },
@@ -27,7 +27,7 @@ const ContinueLearning = () => {
       author: "Prashant Kumar Singh",
       role: "Software Developer",
       level: "FRONTEND",
-      image: "/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png", 
+      image: "/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png", 
       progress: 75,
       bgColor: "bg-gradient-to-br from-blue-500 to-cyan-500"
     }

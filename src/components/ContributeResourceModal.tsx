@@ -56,7 +56,7 @@ const ContributeResourceModal = ({ isOpen, onClose, onContribute }: ContributeRe
       pages: formData.type === 'pdf' ? parseInt(formData.pages) : undefined,
       fileCount: formData.type === 'file' ? parseInt(formData.fileCount) : undefined,
       fileSize: formData.fileSize,
-      thumbnail: "/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
+      thumbnail: "/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
       author: formData.author,
       rating: 4.5,
       enrolled: 0,

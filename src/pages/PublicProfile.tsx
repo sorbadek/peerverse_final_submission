@@ -4,7 +4,7 @@ import { useParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import PublicProfileContent from '../components/PublicProfileContent';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 
 const PublicProfile = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);

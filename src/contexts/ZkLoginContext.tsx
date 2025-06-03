@@ -1,13 +1,15 @@
-
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useEnokiFlow, useZkLoginSession } from '@mysten/enoki/react';
+import React, { createContext, useState, ReactNode } from 'react';
+import { useEnokiFlow } from '@mysten/enoki/react';
+import { useWallets } from '@mysten/dapp-kit';
+import { type EnokiWallet } from '@mysten/enoki';
 
 interface ZkLoginContextType {
-  session: any | null;
+  session: EnokiWallet | null;
   isLoading: boolean;
   login: () => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
+  currentAddress: string | undefined;
 }
 
 const ZkLoginContext = createContext<ZkLoginContextType | undefined>(undefined);
@@ -19,8 +21,9 @@ interface ZkLoginProviderProps {
 export const ZkLoginProvider: React.FC<ZkLoginProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const enokiFlow = useEnokiFlow();
-  const zkLoginSession = useZkLoginSession();
-  const session = zkLoginSession || null;
+  const wallets = useWallets();
+  const currentWallet = wallets.find(wallet => 'provider' in wallet && wallet.provider === 'google');
+  const currentAddress = currentWallet?.accounts[0]?.address;
 
   const login = async () => {
     try {
@@ -29,28 +32,31 @@ export const ZkLoginProvider: React.FC<ZkLoginProviderProps> = ({ children }) =>
       await enokiFlow.createAuthorizationURL({
         provider: 'google',
         clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id',
-        redirectUrl: `${window.location.origin}/auth/callback`,
-        extraParams: {
-          scope: 'openid email profile',
-        },
+        redirectUrl: `${window.location.origin}/auth/callback`
       });
     } catch (error) {
       console.error('Error during zkLogin:', error);
+      if (error instanceof Error) {
+        console.error('Error details:', error.message);
+      }
       setIsLoading(false);
     }
   };
 
   const logout = () => {
-    enokiFlow.logout();
+    if (enokiFlow) {
+      enokiFlow.logout();
+    }
     localStorage.removeItem('zkLogin_session');
   };
 
   const value: ZkLoginContextType = {
-    session,
+    session: currentWallet as EnokiWallet || null,
     isLoading,
     login,
     logout,
-    isAuthenticated: !!session,
+    isAuthenticated: !!currentAddress,
+    currentAddress
   };
 
   return (
@@ -60,10 +66,4 @@ export const ZkLoginProvider: React.FC<ZkLoginProviderProps> = ({ children }) =>
   );
 };
 
-export const useZkLogin = () => {
-  const context = useContext(ZkLoginContext);
-  if (context === undefined) {
-    throw new Error('useZkLogin must be used within a ZkLoginProvider');
-  }
-  return context;
-};
+export { ZkLoginContext };

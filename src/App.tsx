@@ -1,10 +1,12 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { EnokiFlowProvider } from '@mysten/enoki/react';
+import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
+import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
+import { registerEnokiWallets } from '@mysten/enoki';
 import { AuthProvider } from './contexts/AuthContext';
 import { ZkLoginProvider } from './contexts/ZkLoginContext';
 import { SocialProvider } from './components/SocialContext';
@@ -24,76 +26,100 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+// Configure network
+const networks = {
+  devnet: { url: getFullnodeUrl('devnet') }
+};
+
+// Create SUI client for Enoki
+const suiClient = new SuiClient({ url: getFullnodeUrl('devnet') });
+
+// Register Enoki wallets with API key
+registerEnokiWallets({
+  apiKey: import.meta.env.VITE_ENOKI_API_KEY || 'enoki_public_516fba167270992f916c4dce34c138e9',
+  providers: {
+    google: {
+      clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id',
+      redirectUrl: `${window.location.origin}/auth/callback`
+    }
+  },
+  client: suiClient
+});
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
-      <EnokiFlowProvider apiKey={import.meta.env.VITE_ENOKI_API_KEY || 'demo-api-key'}>
-        <ZkLoginProvider>
-          <AuthProvider>
-            <SocialProvider>
-              <TooltipProvider>
-                <Toaster />
-                <Sonner />
-                <Routes>
-                  <Route path="/" element={<Landing />} />
-                  <Route path="/auth/callback" element={<AuthCallback />} />
-                  <Route path="/dashboard" element={
-                    <ProtectedRoute>
-                      <Index />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/learn" element={
-                    <ProtectedRoute>
-                      <Learn />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/tutor-hub" element={
-                    <ProtectedRoute>
-                      <TutorHub />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/community" element={
-                    <ProtectedRoute>
-                      <Community />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/marketplace" element={
-                    <ProtectedRoute>
-                      <Marketplace />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/upload-material" element={
-                    <ProtectedRoute>
-                      <UploadMaterial />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/vault" element={
-                    <ProtectedRoute>
-                      <Vault />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/settings" element={
-                    <ProtectedRoute>
-                      <Settings />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/profile/:userId" element={
-                    <ProtectedRoute>
-                      <PublicProfile />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/profile" element={
-                    <ProtectedRoute>
-                      <PublicProfile />
-                    </ProtectedRoute>
-                  } />
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </TooltipProvider>
-            </SocialProvider>
-          </AuthProvider>
-        </ZkLoginProvider>
-      </EnokiFlowProvider>
+      <SuiClientProvider networks={networks} defaultNetwork="devnet">
+        <WalletProvider>
+          <EnokiFlowProvider apiKey={import.meta.env.VITE_ENOKI_API_KEY || 'enoki_public_516fba167270992f916c4dce34c138e9'}>
+            <ZkLoginProvider>
+              <AuthProvider>
+                <SocialProvider>
+                  <TooltipProvider>
+                    <Toaster />
+                    <Sonner />
+                    <Routes>
+                      <Route path="/" element={<Landing />} />
+                      <Route path="/auth/callback" element={<AuthCallback />} />
+                      <Route path="/dashboard" element={
+                        <ProtectedRoute>
+                          <Index />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/learn" element={
+                        <ProtectedRoute>
+                          <Learn />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/tutor-hub" element={
+                        <ProtectedRoute>
+                          <TutorHub />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/community" element={
+                        <ProtectedRoute>
+                          <Community />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/marketplace" element={
+                        <ProtectedRoute>
+                          <Marketplace />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/upload-material" element={
+                        <ProtectedRoute>
+                          <UploadMaterial />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/vault" element={
+                        <ProtectedRoute>
+                          <Vault />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/settings" element={
+                        <ProtectedRoute>
+                          <Settings />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/profile/:userId" element={
+                        <ProtectedRoute>
+                          <PublicProfile />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/profile" element={
+                        <ProtectedRoute>
+                          <PublicProfile />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </TooltipProvider>
+                </SocialProvider>
+              </AuthProvider>
+            </ZkLoginProvider>
+          </EnokiFlowProvider>
+        </WalletProvider>
+      </SuiClientProvider>
     </BrowserRouter>
   </QueryClientProvider>
 );

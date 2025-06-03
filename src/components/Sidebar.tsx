@@ -2,7 +2,7 @@
 import React from 'react';
 import { Home, BookOpen, Users, MessageSquare, ShoppingBag, Vault, User, Settings, LogOut, X } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { toast } from '@/hooks/use-toast';
 
 interface SidebarProps {
@@ -49,7 +49,7 @@ const Sidebar = ({ isOpen, onClose }: SidebarProps) => {
       <div className="p-6 h-full flex flex-col">
         <div className="flex items-center justify-between mb-8">
           <img 
-            src="/lovable-uploads/f60d0cca-0f77-48f5-8700-a54fdfd0c187.png" 
+            src="/image/f60d0cca-0f77-48f5-8700-a54fdfd0c187.png" 
             alt="PeerVerse Logo" 
             className="h-8 w-auto"
           />

@@ -84,7 +84,7 @@ const XPPurchaseModal = ({ isOpen, onClose }: XPPurchaseModalProps) => {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-2xl">
             <img 
-              src="/lovable-uploads/9246f030-df64-4104-a285-57ba9466318c.png" 
+              src="/image/wallet.png" 
               alt="XP Coin" 
               className="h-6 w-6"
             />

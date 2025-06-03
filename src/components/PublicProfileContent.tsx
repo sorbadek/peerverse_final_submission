@@ -21,7 +21,7 @@ const PublicProfileContent = ({ isOwnProfile = true, userId }: PublicProfileCont
     if (!id || isOwnProfile) {
       return {
         name: 'Sandro Williams',
-        profilePicture: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+        profilePicture: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
         interests: ['DeFi & Trading', 'NFTs & Digital Art', 'Smart Contract Development', 'DAO & Governance'],
         bio: 'Passionate blockchain developer and educator. Love helping others learn about the Sui ecosystem.',
         location: 'San Francisco, CA',

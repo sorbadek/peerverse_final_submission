@@ -14,7 +14,7 @@ const XPBalanceCard = () => {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <img 
-                src="/lovable-uploads/9246f030-df64-4104-a285-57ba9466318c.png" 
+                src="/image/wallet.png" 
                 alt="XP Coin" 
                 className="w-6 h-6"
               />

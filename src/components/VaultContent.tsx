@@ -45,12 +45,12 @@ const VaultContent = () => {
       type: 'PDF',
       category: 'Programming',
       author: 'Sarah Chen',
-      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      authorAvatar: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
       dateAdded: '2024-01-15',
       size: '2.4 MB',
       rating: 4.8,
       tags: ['React', 'JavaScript', 'Frontend'],
-      thumbnail: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png'
+      thumbnail: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png'
     },
     {
       id: 2,
@@ -58,12 +58,12 @@ const VaultContent = () => {
       type: 'Video',
       category: 'AI/ML',
       author: 'Dr. Michael Rodriguez',
-      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      authorAvatar: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
       dateAdded: '2024-01-10',
       size: '1.2 GB',
       rating: 4.9,
       tags: ['ML', 'Python', 'AI'],
-      thumbnail: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png'
+      thumbnail: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png'
     },
     {
       id: 3,
@@ -71,12 +71,12 @@ const VaultContent = () => {
       type: 'Image',
       category: 'Design',
       author: 'Emma Thompson',
-      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      authorAvatar: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
       dateAdded: '2024-01-08',
       size: '45 MB',
       rating: 4.7,
       tags: ['Figma', 'Design', 'UI/UX'],
-      thumbnail: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png'
+      thumbnail: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png'
     },
     {
       id: 4,
@@ -84,12 +84,12 @@ const VaultContent = () => {
       type: 'Code',
       category: 'Programming',
       author: 'Alex Johnson',
-      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      authorAvatar: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
       dateAdded: '2024-01-05',
       size: '8.7 MB',
       rating: 4.6,
       tags: ['Python', 'Data Science', 'Scripts'],
-      thumbnail: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png'
+      thumbnail: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png'
     },
     {
       id: 5,
@@ -97,12 +97,12 @@ const VaultContent = () => {
       type: 'Audio',
       category: 'Business',
       author: 'Maria Garcia',
-      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      authorAvatar: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
       dateAdded: '2024-01-03',
       size: '156 MB',
       rating: 4.5,
       tags: ['Business', 'Podcast', 'Strategy'],
-      thumbnail: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png'
+      thumbnail: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png'
     },
     {
       id: 6,
@@ -110,12 +110,12 @@ const VaultContent = () => {
       type: 'Archive',
       category: 'Programming',
       author: 'John Smith',
-      authorAvatar: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      authorAvatar: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
       dateAdded: '2024-01-01',
       size: '234 MB',
       rating: 4.8,
       tags: ['HTML', 'CSS', 'JavaScript'],
-      thumbnail: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png'
+      thumbnail: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png'
     }
   ];
 

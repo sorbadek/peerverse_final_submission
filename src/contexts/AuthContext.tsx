@@ -1,6 +1,5 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useZkLogin } from './ZkLoginContext';
+import { useZkLogin } from '../hooks/useZkLogin';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -14,65 +13,58 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<{ name: string; email: string; zkAddress?: string } | null>(null);
-  const { session: zkSession, isAuthenticated: zkAuthenticated, logout: zkLogout } = useZkLogin();
+  const { session: zkSession, isAuthenticated: zkAuthenticated, logout: zkLogout, currentAddress } = useZkLogin();
 
   useEffect(() => {
     // Check if user is already logged in from localStorage or zkLogin
     const savedUser = localStorage.getItem('user');
-    
-    if (zkAuthenticated && zkSession) {
-      // If zkLogin is active, use zkLogin session
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+      setIsAuthenticated(true);
+    } else if (zkAuthenticated && currentAddress) {
+      // If zkLogin is authenticated but no local user, create one
       const zkUser = {
-        name: zkSession.user?.name || 'zkLogin User',
-        email: zkSession.user?.email || 'user@zklogin.sui',
-        zkAddress: zkSession.address,
+        name: 'zkLogin User',
+        email: 'user@zklogin.sui',
+        zkAddress: currentAddress
       };
       setUser(zkUser);
       setIsAuthenticated(true);
       localStorage.setItem('user', JSON.stringify(zkUser));
-    } else if (savedUser && !zkAuthenticated) {
-      // Fallback to regular auth if no zkLogin
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
-    } else if (!zkAuthenticated) {
-      // Clear auth state if no zkLogin session
-      setUser(null);
-      setIsAuthenticated(false);
     }
-  }, [zkAuthenticated, zkSession]);
+  }, [zkAuthenticated, currentAddress]);
 
   const login = (email: string, password: string) => {
-    // Simple demo login - in real app this would call an API
-    const userData = { name: 'Sandro Williams', email };
-    setUser(userData);
+    // For demo purposes, auto-login
+    const user = {
+      name: 'Demo User',
+      email,
+    };
+    setUser(user);
     setIsAuthenticated(true);
-    localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('user', JSON.stringify(user));
   };
 
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('user');
-    
-    // Also logout from zkLogin if active
-    if (zkAuthenticated) {
-      zkLogout();
-    }
-    
-    console.log('User logged out successfully');
+    // Also logout from zkLogin if it's active
+    zkLogout();
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        user,
+        login,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export { AuthContext };

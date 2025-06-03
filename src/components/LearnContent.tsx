@@ -45,7 +45,7 @@ const LearnContent = () => {
       level: "Advanced",
       duration: "2h 45m",
       fileSize: "1.2 GB",
-      thumbnail: "/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
+      thumbnail: "/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
       author: "Sarah Johnson",
       rating: 4.8,
       enrolled: 1250
@@ -59,7 +59,7 @@ const LearnContent = () => {
       level: "Intermediate",
       pages: 340,
       fileSize: "25 MB",
-      thumbnail: "/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
+      thumbnail: "/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
       author: "Mike Chen",
       rating: 4.9,
       downloaded: 890
@@ -73,7 +73,7 @@ const LearnContent = () => {
       level: "Beginner",
       duration: "3h 20m",
       fileSize: "1.8 GB",
-      thumbnail: "/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
+      thumbnail: "/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
       author: "Emily Rodriguez",
       rating: 4.7,
       enrolled: 2100
@@ -87,7 +87,7 @@ const LearnContent = () => {
       level: "Intermediate",
       duration: "4h 15m",
       fileSize: "2.1 GB",
-      thumbnail: "/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
+      thumbnail: "/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
       author: "David Park",
       rating: 4.6,
       enrolled: 980
@@ -101,7 +101,7 @@ const LearnContent = () => {
       level: "Advanced",
       pages: 420,
       fileSize: "18 MB",
-      thumbnail: "/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
+      thumbnail: "/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
       author: "Dr. Lisa Wang",
       rating: 4.9,
       downloaded: 1500
@@ -115,7 +115,7 @@ const LearnContent = () => {
       level: "Intermediate",
       fileCount: 45,
       fileSize: "150 MB",
-      thumbnail: "/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
+      thumbnail: "/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png",
       author: "Alex Thompson",
       rating: 4.5,
       downloaded: 650

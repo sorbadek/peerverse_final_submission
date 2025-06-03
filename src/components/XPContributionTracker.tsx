@@ -17,7 +17,7 @@ const XPContributionTracker = () => {
         <div className="text-center">
           <div className="flex items-center justify-center mb-2">
             <img 
-              src="/lovable-uploads/9246f030-df64-4104-a285-57ba9466318c.png" 
+              src="/image/wallet.png" 
               alt="XP Coin" 
               className="w-5 h-5 mr-2"
             />
