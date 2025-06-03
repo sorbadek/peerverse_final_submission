@@ -333,13 +333,25 @@ const Landing = () => {
 
       {/* Footer */}
       <footer className="py-12 px-4 bg-gray-950 border-t border-gray-800">
-        <div className="max-w-6xl mx-auto text-center">
-          <h3 className="text-2xl font-bold mb-4 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-            PeerVerse
-          </h3>
-          <p className="text-gray-400 mb-6">Decentralized Learning. Verified Knowledge. Infinite Possibilities.</p>
-          <div className="text-gray-500 text-sm">
-            © 2024 PeerVerse. Built with ❤️ for Africa and the World.
+        <div className="max-w-6xl mx-auto flex items-center justify-between">
+          {/* Logo Section */}
+          <div className="flex items-center space-x-4">
+            <img 
+              src="/lovable-uploads/51eb3693-5839-4ffb-b4d9-304c31db9ca5.png" 
+              alt="PeerVerse Logo" 
+              className="h-8 w-auto"
+            />
+            <div className="h-6 w-px bg-gray-600" />
+            <img 
+              src="/lovable-uploads/a6bb7655-4e6b-43a3-a684-02fb8f7f78b7.png" 
+              alt="Sui On Campus Logo" 
+              className="h-6 w-auto"
+            />
+          </div>
+
+          {/* Copyright */}
+          <div className="text-gray-400 text-sm">
+            &copy; 2025 Michadek23 - Sui Buildathon
           </div>
         </div>
       </footer>
