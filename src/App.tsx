@@ -38,6 +38,7 @@ const suiClient = new SuiClient({ url: getFullnodeUrl(NETWORK) });
 // Register Enoki wallets with API key
 registerEnokiWallets({
   apiKey: import.meta.env.VITE_ENOKI_API_KEY,
+  network: NETWORK,
   providers: {
     google: {
       clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
