@@ -26,20 +26,21 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-// Configure network
+// Configure the Sui network
+const NETWORK = 'devnet';
 const networks = {
-  devnet: { url: getFullnodeUrl('devnet') }
+  [NETWORK]: { url: getFullnodeUrl(NETWORK) }
 };
 
 // Create SUI client for Enoki
-const suiClient = new SuiClient({ url: getFullnodeUrl('devnet') });
+const suiClient = new SuiClient({ url: getFullnodeUrl(NETWORK) });
 
 // Register Enoki wallets with API key
 registerEnokiWallets({
-  apiKey: import.meta.env.VITE_ENOKI_API_KEY || 'enoki_public_516fba167270992f916c4dce34c138e9',
+  apiKey: import.meta.env.VITE_ENOKI_API_KEY,
   providers: {
     google: {
-      clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID || 'your-google-client-id',
+      clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID,
       redirectUrl: `${window.location.origin}/auth/callback`
     }
   },
@@ -49,9 +50,9 @@ registerEnokiWallets({
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <BrowserRouter>
-      <SuiClientProvider networks={networks} defaultNetwork="devnet">
-        <WalletProvider>
-          <EnokiFlowProvider apiKey={import.meta.env.VITE_ENOKI_API_KEY || 'enoki_public_516fba167270992f916c4dce34c138e9'}>
+      <SuiClientProvider networks={networks} defaultNetwork={NETWORK}>
+        <WalletProvider preferredWallets={['enoki']}>
+          <EnokiFlowProvider apiKey="enoki_private_8f8d21d3e670a36855068caaf894ada0">
             <ZkLoginProvider>
               <AuthProvider>
                 <SocialProvider>
