@@ -6,13 +6,13 @@ import { useZkLogin } from '../contexts/ZkLoginContext';
 
 interface ZkLoginButtonProps {
   variant?: 'default' | 'outline' | 'ghost';
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
 }
 
 const ZkLoginButton: React.FC<ZkLoginButtonProps> = ({ 
   variant = 'default', 
-  size = 'md',
+  size = 'default',
   className = '' 
 }) => {
   const { login, isLoading, isAuthenticated } = useZkLogin();

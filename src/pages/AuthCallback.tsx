@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { EnokiFlow } from '@mysten/enoki/react';
+import { useEnokiFlow } from '@mysten/enoki/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
 
@@ -9,6 +9,7 @@ const AuthCallback = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState<'processing' | 'success' | 'error'>('processing');
   const [error, setError] = useState<string>('');
+  const enokiFlow = useEnokiFlow();
 
   useEffect(() => {
     const handleCallback = async () => {
@@ -21,16 +22,8 @@ const AuthCallback = () => {
           throw new Error('No authorization code received');
         }
 
-        const enokiFlow = new EnokiFlow({
-          apiKey: process.env.VITE_ENOKI_API_KEY || 'demo-api-key',
-          network: 'testnet',
-        });
-
-        // Complete the zkLogin process
-        const session = await enokiFlow.handleAuthCallback({
-          code: authCode,
-          state: state || undefined,
-        });
+        // Complete the zkLogin process using the enokiFlow
+        const session = await enokiFlow.handleAuthCallback();
 
         if (session) {
           setStatus('success');
@@ -57,7 +50,7 @@ const AuthCallback = () => {
     };
 
     handleCallback();
-  }, [navigate]);
+  }, [navigate, enokiFlow]);
 
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
