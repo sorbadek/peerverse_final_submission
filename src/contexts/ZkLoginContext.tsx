@@ -20,7 +20,7 @@ export const ZkLoginProvider: React.FC<ZkLoginProviderProps> = ({ children }) =>
   const [isLoading, setIsLoading] = useState(false);
   const enokiFlow = useEnokiFlow();
   const zkLoginSession = useZkLoginSession();
-  const session = zkLoginSession?.data || null;
+  const session = zkLoginSession || null;
 
   const login = async () => {
     try {
