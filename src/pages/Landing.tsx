@@ -99,7 +99,7 @@ const Landing = () => {
       </div>
 
       {/* Trust and Credibility Section */}
-      <section className="py-20 px-4 bg-gray-900">
+      <section className="h-screen flex items-center justify-center px-4 bg-gray-900">
         <div className="max-w-6xl mx-auto text-center">
           <h2 className="text-4xl font-bold mb-4">Trusted by Thousands</h2>
           <p className="text-gray-400 mb-12 text-lg">Join Africa's fastest-growing learning community</p>
@@ -117,7 +117,7 @@ const Landing = () => {
       </section>
 
       {/* What is PeerVerse Section */}
-      <section id="about" className="py-20 px-4">
+      <section id="about" className="h-screen flex items-center justify-center px-4">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="animate-fade-in">
@@ -142,7 +142,7 @@ const Landing = () => {
       </section>
 
       {/* How it Works Section */}
-      <section id="features" className="py-20 px-4 bg-gray-900">
+      <section id="features" className="h-screen flex items-center justify-center px-4 bg-gray-900">
         <div className="max-w-6xl mx-auto text-center">
           <div className="grid lg:grid-cols-4 gap-8">
             {howItWorksCards.map((card, index) => (
@@ -161,7 +161,7 @@ const Landing = () => {
       </section>
 
       {/* XP Economy Section */}
-      <section className="py-20 px-4">
+      <section className="h-screen flex items-center justify-center px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h2 className="text-5xl font-bold mb-6">The New Currency of Learning</h2>
           <p className="text-gray-400 text-lg mb-12">
@@ -195,7 +195,7 @@ const Landing = () => {
       </section>
 
       {/* Marketplace and Vault Section */}
-      <section className="py-20 px-4 bg-gray-900">
+      <section className="h-screen flex items-center justify-center px-4 bg-gray-900">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div className="relative">
@@ -219,7 +219,7 @@ const Landing = () => {
       </section>
 
       {/* Talent Network Section */}
-      <section className="py-20 px-4">
+      <section className="h-screen flex items-center justify-center px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h2 className="text-5xl font-bold mb-6">Hire From Within or Be Hired From Within</h2>
           <p className="text-gray-400 text-lg mb-12 max-w-3xl mx-auto">
@@ -254,7 +254,7 @@ const Landing = () => {
       </section>
 
       {/* Community DAO Section */}
-      <section id="community" className="py-20 px-4 bg-gray-900">
+      <section id="community" className="h-screen flex items-center justify-center px-4 bg-gray-900">
         <div className="max-w-6xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
@@ -279,7 +279,7 @@ const Landing = () => {
       </section>
 
       {/* Why Africa First Section */}
-      <section className="py-20 px-4">
+      <section className="h-screen flex items-center justify-center px-4">
         <div className="max-w-6xl mx-auto text-center">
           <h2 className="text-5xl font-bold mb-6">Built for Africa. Designed for the World</h2>
           <p className="text-gray-400 text-lg mb-12 max-w-4xl mx-auto">
@@ -313,7 +313,7 @@ const Landing = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 px-4 bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900">
+      <section className="h-screen flex items-center justify-center px-4 bg-gradient-to-r from-blue-900 via-purple-900 to-blue-900">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-6xl font-bold mb-6">Africa's Learning Revolution Starts with You</h2>
           <p className="text-xl text-gray-300 mb-8 max-w-3xl mx-auto">

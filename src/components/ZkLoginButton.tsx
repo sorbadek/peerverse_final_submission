@@ -8,12 +8,14 @@ interface ZkLoginButtonProps {
   variant?: 'default' | 'outline' | 'ghost';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
+  children?: React.ReactNode;
 }
 
 const ZkLoginButton: React.FC<ZkLoginButtonProps> = ({ 
   variant = 'default', 
   size = 'default',
-  className = '' 
+  className = '',
+  children
 }) => {
   const { login, isLoading, isAuthenticated } = useZkLogin();
 
@@ -35,10 +37,12 @@ const ZkLoginButton: React.FC<ZkLoginButtonProps> = ({
           Connecting...
         </>
       ) : (
-        <>
-          <Shield className="w-4 h-4 mr-2" />
-          Login with zkLogin
-        </>
+        children || (
+          <>
+            <Shield className="w-4 h-4 mr-2" />
+            Login with zkLogin
+          </>
+        )
       )}
     </Button>
   );
