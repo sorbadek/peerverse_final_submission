@@ -39,6 +39,7 @@ const App = () => (
               <Route path="/vault" element={<Vault />} />
               <Route path="/settings" element={<Settings />} />
               <Route path="/profile/:userId" element={<PublicProfile />} />
+              <Route path="/profile" element={<PublicProfile />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </TooltipProvider>

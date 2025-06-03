@@ -1,15 +1,18 @@
 
 import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import PublicProfileContent from '../components/PublicProfileContent';
+import { useAuth } from '../contexts/AuthContext';
 
 const PublicProfile = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { userId } = useParams<{ userId: string }>();
+  const { user } = useAuth();
   
-  // In a real app, this would be determined by comparing the current user ID with the profile being viewed
-  // For now, we'll assume it's the user's own profile when accessed from /public-profile
-  const isOwnProfile = true;
+  // Determine if this is the user's own profile
+  const isOwnProfile = user?.email === userId || !userId;
 
   return (
     <div className="min-h-screen bg-black flex w-full">
@@ -28,7 +31,10 @@ const PublicProfile = () => {
         
         <main className="flex-1 p-4 lg:p-6 overflow-auto">
           <div className="max-w-7xl mx-auto">
-            <PublicProfileContent isOwnProfile={isOwnProfile} />
+            <PublicProfileContent 
+              isOwnProfile={isOwnProfile} 
+              userId={userId}
+            />
           </div>
         </main>
       </div>

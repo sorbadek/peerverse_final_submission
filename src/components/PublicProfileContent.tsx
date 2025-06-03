@@ -4,25 +4,47 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-import { Star, Users, Award, BookOpen, Share2 } from 'lucide-react';
+import { Star, Users, Award, BookOpen, Share2, MessageCircle, UserPlus } from 'lucide-react';
 import { useCertificates } from '../hooks/useCertificates';
 import CertificateCard from './CertificateCard';
 
 interface PublicProfileContentProps {
   isOwnProfile?: boolean;
+  userId?: string;
 }
 
-const PublicProfileContent = ({ isOwnProfile = true }: PublicProfileContentProps) => {
+const PublicProfileContent = ({ isOwnProfile = true, userId }: PublicProfileContentProps) => {
   const { certificates, isLoading } = useCertificates();
 
-  // User data that would come from settings
-  const userSettings = {
-    name: 'Sandro Williams',
-    profilePicture: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
-    interests: ['DeFi & Trading', 'NFTs & Digital Art', 'Smart Contract Development', 'DAO & Governance']
+  // Mock user data - in real app this would be fetched based on userId
+  const getUserData = (id?: string) => {
+    if (!id || isOwnProfile) {
+      return {
+        name: 'Sandro Williams',
+        profilePicture: '/lovable-uploads/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+        interests: ['DeFi & Trading', 'NFTs & Digital Art', 'Smart Contract Development', 'DAO & Governance'],
+        bio: 'Passionate blockchain developer and educator. Love helping others learn about the Sui ecosystem.',
+        location: 'San Francisco, CA',
+        joinDate: '2024-01-15',
+        verified: true
+      };
+    }
+    
+    // Mock data for other users
+    return {
+      name: 'Alex Chen',
+      profilePicture: '/placeholder-avatar.png',
+      interests: ['Smart Contracts', 'Web3 Development', 'Blockchain Security'],
+      bio: 'Full-stack blockchain developer with 5+ years of experience.',
+      location: 'New York, NY',
+      joinDate: '2023-11-20',
+      verified: false
+    };
   };
 
-  // Dynamically generated achievements based on user activity
+  const userSettings = getUserData(userId);
+
+  // Dynamically generated achievements
   const achievements = [
     { id: 1, title: 'First Session Host', icon: '🎯', earned: '2024-01-15', description: 'Hosted your first learning session' },
     { id: 2, title: 'Knowledge Contributor', icon: '📚', earned: '2024-02-20', description: 'Shared 10+ learning resources' },
@@ -30,10 +52,10 @@ const PublicProfileContent = ({ isOwnProfile = true }: PublicProfileContentProps
     { id: 4, title: 'Session Regular', icon: '⭐', earned: '2024-03-25', description: 'Attended 25+ learning sessions' }
   ];
 
-  // Auto-calculated activity stats based on user engagement
+  // Auto-calculated activity stats
   const totalXPFromCertificates = certificates.reduce((total, cert) => total + cert.xpEarned, 0);
   const activityStats = {
-    xpBalance: totalXPFromCertificates + 1000, // Base + earned from certificates
+    xpBalance: totalXPFromCertificates + 1000,
     peersConnected: 156,
     coursesCompleted: certificates.filter(cert => cert.type === 'resource').length,
     badgesEarned: achievements.length,
@@ -58,9 +80,12 @@ const PublicProfileContent = ({ isOwnProfile = true }: PublicProfileContentProps
             <div className="flex-1">
               <div className="flex items-center space-x-2 mb-2">
                 <h1 className="text-2xl font-bold text-white">{userSettings.name}</h1>
-                <Award className="w-6 h-6 text-yellow-500" />
+                {userSettings.verified && <Award className="w-6 h-6 text-yellow-500" />}
               </div>
-              <p className="text-gray-400 mb-4">Sui Blockchain Enthusiast & DeFi Explorer</p>
+              <p className="text-gray-400 mb-2">{userSettings.bio}</p>
+              <p className="text-sm text-gray-500 mb-4">
+                📍 {userSettings.location} • Joined {new Date(userSettings.joinDate).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+              </p>
               
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                 <div className="text-center">
@@ -81,12 +106,18 @@ const PublicProfileContent = ({ isOwnProfile = true }: PublicProfileContentProps
                 </div>
               </div>
               
-              <div className="flex space-x-2">
+              <div className="flex flex-wrap gap-2">
                 {!isOwnProfile && (
-                  <Button variant="outline" size="sm" className="border-gray-600 text-white hover:bg-gray-700">
-                    <Users className="w-4 h-4 mr-2" />
-                    Connect
-                  </Button>
+                  <>
+                    <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700">
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Connect
+                    </Button>
+                    <Button variant="outline" size="sm" className="border-gray-600 text-white hover:bg-gray-700">
+                      <MessageCircle className="w-4 h-4 mr-2" />
+                      Message
+                    </Button>
+                  </>
                 )}
                 <Button variant="outline" size="sm" className="border-gray-600 text-white hover:bg-gray-700">
                   <Share2 className="w-4 h-4 mr-2" />
@@ -112,7 +143,7 @@ const PublicProfileContent = ({ isOwnProfile = true }: PublicProfileContentProps
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 {achievements.map((achievement) => (
-                  <div key={achievement.id} className="text-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors">
+                  <div key={achievement.id} className="text-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors cursor-pointer">
                     <div className="text-3xl mb-2">{achievement.icon}</div>
                     <div className="text-sm font-medium text-white">{achievement.title}</div>
                     <div className="text-xs text-gray-400">
@@ -156,7 +187,7 @@ const PublicProfileContent = ({ isOwnProfile = true }: PublicProfileContentProps
 
         {/* Right Column */}
         <div className="space-y-6">
-          {/* Learning Interests from Settings */}
+          {/* Learning Interests */}
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="text-white">Learning Interests</CardTitle>
@@ -172,7 +203,7 @@ const PublicProfileContent = ({ isOwnProfile = true }: PublicProfileContentProps
             </CardContent>
           </Card>
 
-          {/* Auto-calculated Activity Stats */}
+          {/* Activity Stats */}
           <Card className="bg-gray-800 border-gray-700">
             <CardHeader>
               <CardTitle className="text-white">Activity Stats</CardTitle>
@@ -199,6 +230,29 @@ const PublicProfileContent = ({ isOwnProfile = true }: PublicProfileContentProps
               </div>
             </CardContent>
           </Card>
+
+          {/* Quick Actions (only for own profile) */}
+          {isOwnProfile && (
+            <Card className="bg-gray-800 border-gray-700">
+              <CardHeader>
+                <CardTitle className="text-white">Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Button variant="outline" className="w-full justify-start border-gray-600 text-white hover:bg-gray-700">
+                  <BookOpen className="w-4 h-4 mr-2" />
+                  View Learning Progress
+                </Button>
+                <Button variant="outline" className="w-full justify-start border-gray-600 text-white hover:bg-gray-700">
+                  <Users className="w-4 h-4 mr-2" />
+                  Manage Connections
+                </Button>
+                <Button variant="outline" className="w-full justify-start border-gray-600 text-white hover:bg-gray-700">
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share Resources
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
