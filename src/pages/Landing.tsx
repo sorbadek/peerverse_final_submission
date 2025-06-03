@@ -4,6 +4,7 @@ import { ArrowRight, Play, Users, TrendingUp, BookOpen, Coins, Network, Vote, Gl
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import FloatingNavbar from '@/components/FloatingNavbar';
+import ZkLoginButton from '@/components/ZkLoginButton';
 
 const Landing = () => {
   const stats = [
@@ -65,9 +66,9 @@ const Landing = () => {
             The first decentralized learning platform where your expertise becomes currency and knowledge flows freely across Africa and beyond
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg">
+            <ZkLoginButton size="lg" className="px-8 py-4 text-lg">
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
+            </ZkLoginButton>
             <Button size="lg" variant="outline" className="border-gray-600 text-white hover:bg-gray-800 px-8 py-4 text-lg">
               <Play className="mr-2 h-5 w-5" /> Watch Demo
             </Button>
@@ -320,9 +321,9 @@ const Landing = () => {
             Your knowledge has value. Your potential has no limits.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="bg-white text-black hover:bg-gray-100 px-8 py-4 text-lg font-semibold">
+            <ZkLoginButton size="lg" className="px-8 py-4 text-lg font-semibold bg-white text-black hover:bg-gray-100">
               Get Started <Rocket className="ml-2 h-5 w-5" />
-            </Button>
+            </ZkLoginButton>
             <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-black px-8 py-4 text-lg">
               Learn More
             </Button>

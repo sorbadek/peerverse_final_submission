@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Menu, X } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import ZkLoginButton from '@/components/ZkLoginButton';
 
 const FloatingNavbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -74,9 +74,7 @@ const FloatingNavbar = () => {
                 {item.label}
               </a>
             ))}
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2">
-              Get Started
-            </Button>
+            <ZkLoginButton className="px-6 py-2" />
           </div>
 
           {/* Mobile Menu Button */}
@@ -103,9 +101,7 @@ const FloatingNavbar = () => {
                 </a>
               ))}
               <div className="px-3 py-2">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white w-full">
-                  Get Started
-                </Button>
+                <ZkLoginButton className="w-full" />
               </div>
             </div>
           </div>

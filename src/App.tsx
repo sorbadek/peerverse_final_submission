@@ -8,6 +8,7 @@ import { EnokiFlowProvider } from '@mysten/enoki/react';
 import { AuthProvider } from './contexts/AuthContext';
 import { ZkLoginProvider } from './contexts/ZkLoginContext';
 import { SocialProvider } from './components/SocialContext';
+import ProtectedRoute from './components/ProtectedRoute';
 import Index from "./pages/Index";
 import Landing from "./pages/Landing";
 import Learn from "./pages/Learn";
@@ -35,17 +36,57 @@ const App = () => (
                 <Sonner />
                 <Routes>
                   <Route path="/" element={<Landing />} />
-                  <Route path="/dashboard" element={<Index />} />
-                  <Route path="/learn" element={<Learn />} />
-                  <Route path="/tutor-hub" element={<TutorHub />} />
-                  <Route path="/community" element={<Community />} />
-                  <Route path="/marketplace" element={<Marketplace />} />
-                  <Route path="/upload-material" element={<UploadMaterial />} />
-                  <Route path="/vault" element={<Vault />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/profile/:userId" element={<PublicProfile />} />
-                  <Route path="/profile" element={<PublicProfile />} />
                   <Route path="/auth/callback" element={<AuthCallback />} />
+                  <Route path="/dashboard" element={
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/learn" element={
+                    <ProtectedRoute>
+                      <Learn />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/tutor-hub" element={
+                    <ProtectedRoute>
+                      <TutorHub />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/community" element={
+                    <ProtectedRoute>
+                      <Community />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/marketplace" element={
+                    <ProtectedRoute>
+                      <Marketplace />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/upload-material" element={
+                    <ProtectedRoute>
+                      <UploadMaterial />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/vault" element={
+                    <ProtectedRoute>
+                      <Vault />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/settings" element={
+                    <ProtectedRoute>
+                      <Settings />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/profile/:userId" element={
+                    <ProtectedRoute>
+                      <PublicProfile />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/profile" element={
+                    <ProtectedRoute>
+                      <PublicProfile />
+                    </ProtectedRoute>
+                  } />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </TooltipProvider>
