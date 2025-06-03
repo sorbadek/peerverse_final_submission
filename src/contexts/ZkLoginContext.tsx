@@ -19,7 +19,8 @@ interface ZkLoginProviderProps {
 export const ZkLoginProvider: React.FC<ZkLoginProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(false);
   const enokiFlow = useEnokiFlow();
-  const { data: session } = useZkLoginSession();
+  const zkLoginSession = useZkLoginSession();
+  const session = zkLoginSession?.data || null;
 
   const login = async () => {
     try {
