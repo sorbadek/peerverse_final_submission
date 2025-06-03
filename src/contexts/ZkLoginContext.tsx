@@ -2,7 +2,6 @@ import React, { createContext, useState, ReactNode } from 'react';
 import { useEnokiFlow } from '@mysten/enoki/react';
 import { useWallets } from '@mysten/dapp-kit';
 import { type EnokiWallet } from '@mysten/enoki';
-import { getFullnodeUrl } from '@mysten/sui.js/client';
 
 interface ZkLoginContextType {
   session: EnokiWallet | null;

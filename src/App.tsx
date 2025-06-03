@@ -52,7 +52,7 @@ const App = () => (
     <BrowserRouter>
       <SuiClientProvider networks={networks} defaultNetwork={NETWORK}>
         <WalletProvider preferredWallets={['enoki']}>
-          <EnokiFlowProvider apiKey="enoki_private_8f8d21d3e670a36855068caaf894ada0">
+          <EnokiFlowProvider apiKey={import.meta.env.VITE_ENOKI_API_KEY}>
             <ZkLoginProvider>
               <AuthProvider>
                 <SocialProvider>

@@ -69,7 +69,7 @@ const Landing = () => {
             <ZkLoginButton size="lg" className="px-8 py-4 text-lg">
               Get Started <ArrowRight className="ml-2 h-5 w-5" />
             </ZkLoginButton>
-            <Button size="lg" variant="outline" className="border-gray-600 text-white hover:bg-gray-800 px-8 py-4 text-lg">
+            <Button size="lg" variant="outline" className="border-gray-600 bg-gray-800 text-white hover: px-8 py-4 text-lg">
               <Play className="mr-2 h-5 w-5" /> Watch Demo
             </Button>
           </div>
@@ -324,7 +324,7 @@ const Landing = () => {
             <ZkLoginButton size="lg" className="px-8 py-4 text-lg font-semibold bg-white text-black hover:bg-gray-100">
               Get Started <Rocket className="ml-2 h-5 w-5" />
             </ZkLoginButton>
-            <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-black px-8 py-4 text-lg">
+            <Button size="lg" variant="outline" className="border-white bg-gray-800 text-white hover:bg-white hover:text-black px-8 py-4 text-lg">
               Learn More
             </Button>
           </div>
