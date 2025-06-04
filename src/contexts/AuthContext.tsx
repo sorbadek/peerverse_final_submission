@@ -1,43 +1,39 @@
 import React, { useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
-import { jwtDecode } from 'jwt-decode';
 import { useZkLogin } from './ZkLoginContext';
 import { useWallets } from '@mysten/dapp-kit';
-import { JwtPayload, User, AuthContext, AuthContextType } from './AuthContext.types';
+import { User, AuthContext, AuthContextType } from './AuthContext.types';
 
 interface AuthProviderProps {
   children: ReactNode;
 }
 
 const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  // Initialize user from localStorage synchronously
+  const [user, setUser] = useState<User | null>(() => {
+    try {
+      const storedUserStr = localStorage.getItem('user');
+      return storedUserStr ? JSON.parse(storedUserStr) : null;
+    } catch (e) {
+      console.error('Error parsing stored user:', e);
+      localStorage.removeItem('user');
+      return null;
+    }
+  });
+
+  // Initialize isAuthenticated based on user presence
+  const [isAuthenticated, setIsAuthenticated] = useState(() => !!user);
+
+  // Loading is true if user is null (means auth check still in progress)
+  const [loading, setLoading] = useState(user === null);
 
   const { isAuthenticated: zkAuthenticated, logout: zkLogout, currentAddress } = useZkLogin();
-  const wallets = useWallets(); // Currently unused, but kept for future functionality
-
-  const login = useCallback((email: string, password: string) => {
-    console.log('Login called with:', { email, password });
-    // Placeholder for future login logic
-  }, []);
-
-  const logout = useCallback(() => {
-    console.log('Logout called');
-    setUser(null);
-    setIsAuthenticated(false);
-    localStorage.removeItem('user');
-    localStorage.removeItem('zklogin_id_token');
-    if (typeof zkLogout === 'function') {
-      zkLogout();
-    }
-  }, [zkLogout]);
+  const wallets = useWallets();
 
   const checkAuthState = useCallback(async () => {
     try {
       console.log('--- Checking auth state ---');
 
       const storedUserStr = localStorage.getItem('user');
-      const idToken = localStorage.getItem('zklogin_id_token');
       let storedUser: User | null = null;
 
       try {
@@ -48,72 +44,45 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       console.log('Auth check - storedUser:', storedUser);
-      console.log('Auth check - idToken exists:', !!idToken);
       console.log('Auth check - zkAuthenticated:', zkAuthenticated);
       console.log('Auth check - currentAddress:', currentAddress);
 
-      // Case 1: Check token validity and stored user
-      if (idToken && storedUser) {
-        try {
-          const decoded = jwtDecode<JwtPayload>(idToken);
-          const currentTime = Math.floor(Date.now() / 1000);
-          const tokenExp = typeof decoded.exp === 'number' ? decoded.exp : 0;
+      if (storedUser) {
+        // User exists in localStorage, treat as authenticated
+        setUser(storedUser);
+        setIsAuthenticated(true);
+        setLoading(false);
 
-          if (tokenExp > currentTime) {
-            console.log('Found valid auth token in localStorage');
-
-            const validUser: User = {
-              name: storedUser.name || 'User',
-              email: storedUser.email || `user-${currentAddress?.slice(0, 8) || 'unknown'}@zk.sui`,
-              zkAddress: storedUser.zkAddress || currentAddress || '',
-            };
-
-            setUser(validUser);
-            setIsAuthenticated(true);
-
-            if (JSON.stringify(storedUser) !== JSON.stringify(validUser)) {
-              localStorage.setItem('user', JSON.stringify(validUser));
-            }
-
-            setLoading(false);
-            return;
-          } else {
-            console.log('Token expired, clearing auth data');
-            localStorage.removeItem('user');
-            localStorage.removeItem('zklogin_id_token');
-          }
-        } catch (error) {
-          console.error('Error decoding token:', error);
-          localStorage.removeItem('user');
-          localStorage.removeItem('zklogin_id_token');
+        // Update zkLogin info if present
+        if (zkAuthenticated && currentAddress) {
+          const updatedUser: User = {
+            ...storedUser,
+            zkAddress: currentAddress,
+            email: storedUser.email || `user-${currentAddress.slice(0, 8)}@zk.sui`,
+          };
+          setUser(updatedUser);
+          localStorage.setItem('user', JSON.stringify(updatedUser));
         }
+        return;
       }
 
-      // Case 2: zkLogin session
       if (zkAuthenticated && currentAddress) {
         console.log('Using zkLogin wallet for authentication');
 
-        try {
-          const userData: User = {
-            name: storedUser?.name || 'zkUser',
-            email: storedUser?.email || `user-${currentAddress.slice(0, 8)}@zk.sui`,
-            zkAddress: currentAddress,
-            ...(storedUser || {})
-          };
+        const userData: User = {
+          name: 'zkUser',
+          email: `user-${currentAddress.slice(0, 8)}@zk.sui`,
+          zkAddress: currentAddress,
+        };
 
-          setUser(userData);
-          setIsAuthenticated(true);
-          localStorage.setItem('user', JSON.stringify(userData));
-          setLoading(false);
-          return;
-        } catch (error) {
-          console.error('Error processing zkLogin auth:', error);
-          localStorage.removeItem('user');
-          localStorage.removeItem('zklogin_id_token');
-        }
+        setUser(userData);
+        setIsAuthenticated(true);
+        localStorage.setItem('user', JSON.stringify(userData));
+        setLoading(false);
+        return;
       }
 
-      // Case 3: No valid auth
+      // No auth found
       console.log('No authentication found');
       setUser(null);
       setIsAuthenticated(false);
@@ -126,30 +95,25 @@ const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   }, [zkAuthenticated, currentAddress]);
 
-  // Initial check on mount
-  useEffect(() => {
-    console.log('Running auth check with 500ms delay...');
-    const timer = setTimeout(() => {
-      checkAuthState();
-    }, 500);
-
-    const interval = setInterval(() => {
-      console.log('Periodic auth check...');
-      checkAuthState();
-    }, 30000);
-
-    return () => {
-      clearTimeout(timer);
-      clearInterval(interval);
-    };
+  const login = useCallback(() => {
+    console.log('Manual login trigger (if used)');
+    checkAuthState();
   }, [checkAuthState]);
 
-  // Recheck when zk state changes
-  useEffect(() => {
-    if (zkAuthenticated || currentAddress) {
-      checkAuthState();
+  const logout = useCallback(() => {
+    console.log('Logout called');
+    setUser(null);
+    setIsAuthenticated(false);
+    localStorage.removeItem('user');
+    if (typeof zkLogout === 'function') {
+      zkLogout();
     }
-  }, [zkAuthenticated, currentAddress, checkAuthState]);
+  }, [zkLogout]);
+
+  useEffect(() => {
+    // Run auth check on mount and whenever zk auth changes
+    checkAuthState();
+  }, [checkAuthState]);
 
   const contextValue: AuthContextType = useMemo(() => ({
     isAuthenticated,
