@@ -26,7 +26,7 @@ const AuthCallback = () => {
           throw new Error('No authorization token received');
         }
 
-        // Pass the payload string directly to enokiFlow.handleAuthCallback
+        // Use the Enoki SDK's handleAuthCallback as recommended
         await enokiFlow.handleAuthCallback(callbackPayload);
 
         setStatus('success');
