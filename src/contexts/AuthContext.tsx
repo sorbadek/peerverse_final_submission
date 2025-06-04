@@ -1,23 +1,26 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, ReactNode } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import { useZkLogin } from './ZkLoginContext';
 import { useWallets } from '@mysten/dapp-kit';
 import { JwtPayload, User, AuthContext, AuthContextType } from './AuthContext.types';
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  
-  const { isAuthenticated: zkAuthenticated, logout: zkLogout, currentAddress } = useZkLogin();
-  const wallets = useWallets();
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
-  // Login function (placeholder implementation)
+const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const { isAuthenticated: zkAuthenticated, logout: zkLogout, currentAddress } = useZkLogin();
+  const wallets = useWallets(); // Currently unused, but kept for future functionality
+
   const login = useCallback((email: string, password: string) => {
-    console.log('Login called with:', { email });
+    console.log('Login called with:', { email, password });
+    // Placeholder for future login logic
   }, []);
 
-  // Logout function
   const logout = useCallback(() => {
     console.log('Logout called');
     setUser(null);
@@ -29,103 +32,132 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [zkLogout]);
 
-  // Check authentication state
   const checkAuthState = useCallback(async () => {
     try {
       console.log('--- Checking auth state ---');
-      
-      // Check for saved user in localStorage
-      const savedUser = localStorage.getItem('user');
-      if (savedUser) {
-        const parsedUser = JSON.parse(savedUser) as User;
-        const userAddress = (parsedUser as { zkAddress?: string; address?: string });
-        if (parsedUser && (userAddress.zkAddress || userAddress.address)) {
-          setUser(parsedUser);
-          setIsAuthenticated(true);
-          setLoading(false);
-          console.log('Authenticated from localStorage:', parsedUser);
-          return;
-        }
+
+      const storedUserStr = localStorage.getItem('user');
+      const idToken = localStorage.getItem('zklogin_id_token');
+      let storedUser: User | null = null;
+
+      try {
+        storedUser = storedUserStr ? JSON.parse(storedUserStr) : null;
+      } catch (e) {
+        console.error('Error parsing stored user:', e);
         localStorage.removeItem('user');
       }
 
-      // Check for JWT token
-      const idToken = localStorage.getItem('zklogin_id_token');
-      if (idToken && zkAuthenticated && currentAddress) {
+      console.log('Auth check - storedUser:', storedUser);
+      console.log('Auth check - idToken exists:', !!idToken);
+      console.log('Auth check - zkAuthenticated:', zkAuthenticated);
+      console.log('Auth check - currentAddress:', currentAddress);
+
+      // Case 1: Check token validity and stored user
+      if (idToken && storedUser) {
         try {
           const decoded = jwtDecode<JwtPayload>(idToken);
-          const zkUser: User = {
-            name: decoded.name || decoded.given_name || decoded.family_name || 'User',
-            email: decoded.email || 'user@example.com',
-            zkAddress: currentAddress,
-          };
-          
-          setUser(zkUser);
-          setIsAuthenticated(true);
-          localStorage.setItem('user', JSON.stringify(zkUser));
-          setLoading(false);
-          console.log('Authenticated with JWT:', zkUser);
-          return;
-        } catch (e) {
-          console.warn('Failed to decode JWT:', e);
+          const currentTime = Math.floor(Date.now() / 1000);
+          const tokenExp = typeof decoded.exp === 'number' ? decoded.exp : 0;
+
+          if (tokenExp > currentTime) {
+            console.log('Found valid auth token in localStorage');
+
+            const validUser: User = {
+              name: storedUser.name || 'User',
+              email: storedUser.email || `user-${currentAddress?.slice(0, 8) || 'unknown'}@zk.sui`,
+              zkAddress: storedUser.zkAddress || currentAddress || '',
+            };
+
+            setUser(validUser);
+            setIsAuthenticated(true);
+
+            if (JSON.stringify(storedUser) !== JSON.stringify(validUser)) {
+              localStorage.setItem('user', JSON.stringify(validUser));
+            }
+
+            setLoading(false);
+            return;
+          } else {
+            console.log('Token expired, clearing auth data');
+            localStorage.removeItem('user');
+            localStorage.removeItem('zklogin_id_token');
+          }
+        } catch (error) {
+          console.error('Error decoding token:', error);
+          localStorage.removeItem('user');
+          localStorage.removeItem('zklogin_id_token');
         }
       }
 
-      // Check for connected wallet
-      const enokiWallet = wallets.find(w => w.name === 'Enoki' || w.features?.['enoki:zklogin']);
-      if (enokiWallet?.accounts?.[0]?.address) {
-        const zkUser: User = {
-          name: 'User',
-          email: 'user@zklogin.sui',
-          zkAddress: enokiWallet.accounts[0].address,
-        };
-        
-        setUser(zkUser);
-        setIsAuthenticated(true);
-        localStorage.setItem('user', JSON.stringify(zkUser));
-        setLoading(false);
-        console.log('Authenticated with Enoki wallet:', zkUser);
-        return;
+      // Case 2: zkLogin session
+      if (zkAuthenticated && currentAddress) {
+        console.log('Using zkLogin wallet for authentication');
+
+        try {
+          const userData: User = {
+            name: storedUser?.name || 'zkUser',
+            email: storedUser?.email || `user-${currentAddress.slice(0, 8)}@zk.sui`,
+            zkAddress: currentAddress,
+            ...(storedUser || {})
+          };
+
+          setUser(userData);
+          setIsAuthenticated(true);
+          localStorage.setItem('user', JSON.stringify(userData));
+          setLoading(false);
+          return;
+        } catch (error) {
+          console.error('Error processing zkLogin auth:', error);
+          localStorage.removeItem('user');
+          localStorage.removeItem('zklogin_id_token');
+        }
       }
 
-      // No authentication found
+      // Case 3: No valid auth
+      console.log('No authentication found');
       setUser(null);
       setIsAuthenticated(false);
       setLoading(false);
-      console.log('No authentication found');
     } catch (error) {
       console.error('Error in checkAuthState:', error);
+      setUser(null);
+      setIsAuthenticated(false);
       setLoading(false);
     }
-  }, [zkAuthenticated, currentAddress, wallets]);
+  }, [zkAuthenticated, currentAddress]);
 
-  // Initial auth check on mount
+  // Initial check on mount
   useEffect(() => {
-    const delay = window.location.pathname === '/auth/callback' ? 3000 : 500;
-    console.log(`Running auth check with ${delay}ms delay...`);
-    
-    const timer = setTimeout(checkAuthState, delay);
-    return () => clearTimeout(timer);
+    console.log('Running auth check with 500ms delay...');
+    const timer = setTimeout(() => {
+      checkAuthState();
+    }, 500);
+
+    const interval = setInterval(() => {
+      console.log('Periodic auth check...');
+      checkAuthState();
+    }, 30000);
+
+    return () => {
+      clearTimeout(timer);
+      clearInterval(interval);
+    };
   }, [checkAuthState]);
 
-  // Watch for changes in zkAuthenticated or currentAddress
+  // Recheck when zk state changes
   useEffect(() => {
     if (zkAuthenticated || currentAddress) {
       checkAuthState();
     }
   }, [zkAuthenticated, currentAddress, checkAuthState]);
 
-  // Create context value
-  const contextValue = useMemo<AuthContextType>(
-    () => ({
-      isAuthenticated,
-      user,
-      login,
-      logout,
-      loading,
-    }),
-    [isAuthenticated, user, login, logout, loading]
-  );
+  const contextValue: AuthContextType = useMemo(() => ({
+    isAuthenticated,
+    user,
+    login,
+    logout,
+    loading,
+  }), [isAuthenticated, user, login, logout, loading]);
 
   return (
     <AuthContext.Provider value={contextValue}>
@@ -134,4 +166,4 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-// useAuth hook is in src/hooks/useAuth.ts
+export default AuthProvider;

@@ -18,6 +18,10 @@ const AuthCallback = () => {
         console.log('location.hash:', location.hash);
         console.log('location.search:', location.search);
 
+        // Clear any existing auth state
+        localStorage.removeItem('zklogin_id_token');
+        localStorage.removeItem('user');
+
         // Use the fragment (hash) or query string as the callback payload
         let callbackPayload = '';
         if (location.hash && location.hash.length > 1) {
@@ -40,6 +44,18 @@ const AuthCallback = () => {
         
         // Try to get the JWT from the session or Enoki wallet
         let jwtToken: string | null = null;
+        let userAddress: string | null = null;
+        
+        // Get the current address from the Enoki wallet
+        try {
+          const accounts = await window.enoki?.getAccounts();
+          if (accounts?.[0]?.address) {
+            userAddress = accounts[0].address;
+            console.log('Got user address from Enoki wallet:', userAddress);
+          }
+        } catch (e) {
+          console.warn('Could not get address from Enoki wallet:', e);
+        }
         
         // Debug: Log all localStorage contents
         console.log('Current localStorage contents:');
@@ -85,22 +101,36 @@ const AuthCallback = () => {
         if (jwtToken) {
           localStorage.setItem('zklogin_id_token', jwtToken);
           console.log('Saved JWT to localStorage. New token:', jwtToken);
-          // Verify it was saved
+          
+          // If we have user info, save it
+          if (userAddress) {
+            const userData = {
+              name: 'User',
+              email: 'user@zklogin.sui',
+              zkAddress: userAddress
+            };
+            localStorage.setItem('user', JSON.stringify(userData));
+            console.log('Saved user data to localStorage');
+          }
+          
+          // Verify tokens were saved
           const savedToken = localStorage.getItem('zklogin_id_token');
-          console.log('Verification - Retrieved from localStorage:', savedToken);
+          const savedUser = localStorage.getItem('user');
+          console.log('Verification - Retrieved from localStorage:', { savedToken, savedUser });
         } else {
           console.warn('No JWT token found in session or Enoki wallet state');
           // Log the session structure for debugging
           console.log('Session structure:', JSON.stringify(session, null, 2));
+          throw new Error('No authentication token received from provider');
         }
         setStatus('success');
         console.log('AuthCallback - success, redirecting to dashboard in 3 seconds');
         
         // Give more time for the auth state to propagate
         setTimeout(() => {
-          // Force a page reload to ensure auth state is properly detected
+          // Force a full page reload to ensure all auth state is properly initialized
           window.location.href = '/dashboard';
-        }, 3000);
+        }, 1000);
       } catch (error) {
         console.error('zkLogin callback error:', error);
         

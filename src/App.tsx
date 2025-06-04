@@ -7,7 +7,7 @@ import { EnokiFlowProvider } from '@mysten/enoki/react';
 import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
 import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
 import { registerEnokiWallets } from '@mysten/enoki';
-import { AuthProvider } from './contexts/AuthContext';
+import AuthProvider from './contexts/AuthContext';
 import { ZkLoginProvider } from './contexts/ZkLoginContext';
 import { SocialProvider } from './components/SocialContext';
 import ProtectedRoute from './components/ProtectedRoute';
