@@ -39,10 +39,13 @@ const AuthCallback = () => {
         console.log('enokiFlow.handleAuthCallback completed successfully');
 
         setStatus('success');
-        console.log('AuthCallback - success, redirecting to dashboard in 2 seconds');
+        console.log('AuthCallback - success, redirecting to dashboard in 3 seconds');
+        
+        // Give more time for the auth state to propagate
         setTimeout(() => {
-          navigate('/dashboard');
-        }, 2000);
+          // Force a page reload to ensure auth state is properly detected
+          window.location.href = '/dashboard';
+        }, 3000);
       } catch (error) {
         console.error('zkLogin callback error:', error);
         

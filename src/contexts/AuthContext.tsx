@@ -27,57 +27,74 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('wallets:', wallets);
     console.log('zkSession:', zkSession);
 
-    // Check for saved user first
-    const savedUser = localStorage.getItem('user');
-    console.log('savedUser from localStorage:', savedUser);
+    // Add a small delay to allow Enoki flow to complete
+    const checkAuthState = () => {
+      // Check for saved user first
+      const savedUser = localStorage.getItem('user');
+      console.log('savedUser from localStorage:', savedUser);
 
-    if (savedUser) {
-      const parsedUser = JSON.parse(savedUser);
-      setUser(parsedUser);
-      setIsAuthenticated(true);
+      if (savedUser) {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+        setLoading(false);
+        console.log('Set authenticated from localStorage:', parsedUser);
+        return;
+      }
+
+      // Check wallet state more thoroughly
+      const authenticatedWallet = wallets.find(wallet => {
+        const hasAccounts = Array.isArray(wallet.accounts) && wallet.accounts.length > 0;
+        const hasAddress = hasAccounts && wallet.accounts[0]?.address;
+        const isConnected = wallet.connected;
+        console.log('Checking wallet:', { hasAccounts, hasAddress, isConnected, wallet });
+        return hasAccounts && hasAddress && isConnected;
+      });
+
+      console.log('authenticatedWallet:', authenticatedWallet);
+
+      if (authenticatedWallet) {
+        const zkUser = {
+          name: 'zkLogin User',
+          email: 'user@zklogin.sui',
+          zkAddress: authenticatedWallet.accounts[0].address
+        };
+        setUser(zkUser);
+        setIsAuthenticated(true);
+        localStorage.setItem('user', JSON.stringify(zkUser));
+        setLoading(false);
+        console.log('Set authenticated from wallet:', zkUser);
+        return;
+      }
+
+      // Check zkLogin state
+      if (zkAuthenticated && currentAddress) {
+        const zkUser = {
+          name: 'zkLogin User',
+          email: 'user@zklogin.sui',
+          zkAddress: currentAddress
+        };
+        setUser(zkUser);
+        setIsAuthenticated(true);
+        localStorage.setItem('user', JSON.stringify(zkUser));
+        setLoading(false);
+        console.log('Set authenticated from zkLogin:', zkUser);
+        return;
+      }
+
+      // No authentication found
+      setUser(null);
+      setIsAuthenticated(false);
       setLoading(false);
-      console.log('Set authenticated from localStorage:', parsedUser);
-      return;
+      console.log('No authentication found, setting as unauthenticated');
+    };
+
+    // If we're on the callback page, add a delay to allow Enoki to process
+    if (window.location.pathname === '/auth/callback') {
+      setTimeout(checkAuthState, 1000);
+    } else {
+      checkAuthState();
     }
-
-    // Then check wallet state
-    const walletWithAddress = wallets.find(wallet => Array.isArray(wallet.accounts) && wallet.accounts[0]?.address);
-    console.log('walletWithAddress:', walletWithAddress);
-
-    if (walletWithAddress) {
-      const zkUser = {
-        name: 'zkLogin User',
-        email: 'user@zklogin.sui',
-        zkAddress: walletWithAddress.accounts[0].address
-      };
-      setUser(zkUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('user', JSON.stringify(zkUser));
-      setLoading(false);
-      console.log('Set authenticated from wallet:', zkUser);
-      return;
-    }
-
-    // Finally check zkLogin state
-    if (zkAuthenticated && currentAddress) {
-      const zkUser = {
-        name: 'zkLogin User',
-        email: 'user@zklogin.sui',
-        zkAddress: currentAddress
-      };
-      setUser(zkUser);
-      setIsAuthenticated(true);
-      localStorage.setItem('user', JSON.stringify(zkUser));
-      setLoading(false);
-      console.log('Set authenticated from zkLogin:', zkUser);
-      return;
-    }
-
-    // No authentication found
-    setUser(null);
-    setIsAuthenticated(false);
-    setLoading(false);
-    console.log('No authentication found, setting as unauthenticated');
   }, [zkAuthenticated, currentAddress, wallets, zkSession]);
 
   const login = (email: string, password: string) => {
