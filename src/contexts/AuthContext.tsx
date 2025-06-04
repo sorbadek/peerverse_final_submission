@@ -17,7 +17,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<{ name: string; email: string; zkAddress?: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const { session: zkSession, isAuthenticated: zkAuthenticated, logout: zkLogout, currentAddress } = useZkLogin();
+  const { isAuthenticated: zkAuthenticated, logout: zkLogout, currentAddress } = useZkLogin();
   const wallets = useWallets();
 
   useEffect(() => {
@@ -25,7 +25,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('zkAuthenticated:', zkAuthenticated);
     console.log('currentAddress:', currentAddress);
     console.log('wallets:', wallets);
-    console.log('zkSession:', zkSession);
+    wallets.forEach((wallet, idx) => {
+      console.log(`wallet[${idx}]`, wallet);
+    });
+    
 
     const checkAuthState = () => {
       // Check for saved user first
@@ -34,17 +37,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       if (savedUser) {
         const parsedUser = JSON.parse(savedUser);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
-        setLoading(false);
-        console.log('Set authenticated from localStorage:', parsedUser);
-        return;
+        // Only use localStorage if it contains a valid zkAddress or address
+        if (parsedUser && (parsedUser.zkAddress || parsedUser.address)) {
+          setUser(parsedUser);
+          setIsAuthenticated(true);
+          setLoading(false);
+          console.log('Set authenticated from localStorage:', parsedUser);
+          return;
+        }
+        // If invalid, clear it and continue to zkLogin check
+        localStorage.removeItem('user');
       }
 
-      // Check zkLogin context first
+      // Check  context first
       if (zkAuthenticated && currentAddress) {
         const zkUser = {
-          name: 'zkLogin User',
+          name: ' User',
           email: 'user@zklogin.sui',
           zkAddress: currentAddress
         };
@@ -52,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsAuthenticated(true);
         localStorage.setItem('user', JSON.stringify(zkUser));
         setLoading(false);
-        console.log('Set authenticated from zkLogin context:', zkUser);
+        console.log('Set authenticated from  context:', zkUser);
         return;
       }
 
@@ -71,7 +79,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (hasAccounts && hasAddress) {
           const zkUser = {
-            name: 'zkLogin User',
+            name: ' User',
             email: 'user@zklogin.sui',
             zkAddress: enokiWallet.accounts[0].address
           };
@@ -94,12 +102,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // If we're on the callback page, add a longer delay to allow Enoki to process
     if (window.location.pathname === '/auth/callback') {
       console.log('On callback page, waiting for Enoki to complete...');
-      setTimeout(checkAuthState, 3000);
+      setTimeout(checkAuthState, 7000); // Increased delay to 7 seconds for wallet/context to initialize
     } else {
       // For other pages, still add a small delay to allow wallet initialization
       setTimeout(checkAuthState, 500);
     }
-  }, [zkAuthenticated, currentAddress, wallets, zkSession]);
+  }, [zkAuthenticated, currentAddress, wallets]);
 
   const login = (email: string, password: string) => {
     console.log('Traditional login called (not implemented)');

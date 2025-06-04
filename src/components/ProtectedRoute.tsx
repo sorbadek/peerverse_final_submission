@@ -9,13 +9,12 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
+// ProtectedRoute: Only renders children if authenticated, otherwise redirects or shows loading.
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
 
-  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, 'loading:', loading);
-
+  // Show a modern loading screen while checking authentication
   if (loading) {
-    console.log('ProtectedRoute - showing loading screen');
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <Card className="bg-gray-900 border-gray-700 w-full max-w-md">
@@ -37,12 +36,12 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     );
   }
 
+  // If not authenticated, redirect to home
   if (!isAuthenticated) {
-    console.log('ProtectedRoute - redirecting to home, user not authenticated');
     return <Navigate to="/" replace />;
   }
 
-  console.log('ProtectedRoute - rendering protected content');
+  // Authenticated: render protected content
   return <>{children}</>;
 };
 
