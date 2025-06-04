@@ -35,10 +35,17 @@ const AuthCallback = () => {
         console.log('Calling enokiFlow.handleAuthCallback...');
         // Use the Enoki SDK's handleAuthCallback as recommended
         const session = await enokiFlow.handleAuthCallback(callbackPayload);
-        console.log('enokiFlow.handleAuthCallback completed successfully', session);
+        console.log('enokiFlow.handleAuthCallback completed successfully');
+        console.log('Session object structure:', JSON.stringify(session, null, 2));
         
         // Try to get the JWT from the session or Enoki wallet
         let jwtToken: string | null = null;
+        
+        // Debug: Log all localStorage contents
+        console.log('Current localStorage contents:');
+        Object.keys(localStorage).forEach(key => {
+          console.log(`- ${key}:`, localStorage.getItem(key));
+        });
         
         // Safely check session for idToken
         interface AuthSession {
@@ -77,7 +84,10 @@ const AuthCallback = () => {
         
         if (jwtToken) {
           localStorage.setItem('zklogin_id_token', jwtToken);
-          console.log('Saved JWT to localStorage');
+          console.log('Saved JWT to localStorage. New token:', jwtToken);
+          // Verify it was saved
+          const savedToken = localStorage.getItem('zklogin_id_token');
+          console.log('Verification - Retrieved from localStorage:', savedToken);
         } else {
           console.warn('No JWT token found in session or Enoki wallet state');
           // Log the session structure for debugging
