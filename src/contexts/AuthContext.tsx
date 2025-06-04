@@ -27,7 +27,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     console.log('wallets:', wallets);
     console.log('zkSession:', zkSession);
 
-    // Add a delay to allow Enoki flow to complete after callback
     const checkAuthState = () => {
       // Check for saved user first
       const savedUser = localStorage.getItem('user');
@@ -42,31 +41,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      // Check wallet state - look for wallets with accounts and addresses
-      const walletWithAddress = wallets.find(wallet => {
-        const hasAccounts = Array.isArray(wallet.accounts) && wallet.accounts.length > 0;
-        const hasAddress = hasAccounts && wallet.accounts[0]?.address;
-        console.log('Checking wallet:', { hasAccounts, hasAddress, wallet });
-        return hasAccounts && hasAddress;
-      });
-
-      console.log('walletWithAddress:', walletWithAddress);
-
-      if (walletWithAddress && walletWithAddress.accounts[0]?.address) {
-        const zkUser = {
-          name: 'zkLogin User',
-          email: 'user@zklogin.sui',
-          zkAddress: walletWithAddress.accounts[0].address
-        };
-        setUser(zkUser);
-        setIsAuthenticated(true);
-        localStorage.setItem('user', JSON.stringify(zkUser));
-        setLoading(false);
-        console.log('Set authenticated from wallet:', zkUser);
-        return;
-      }
-
-      // Check zkLogin state
+      // Check zkLogin context first
       if (zkAuthenticated && currentAddress) {
         const zkUser = {
           name: 'zkLogin User',
@@ -77,8 +52,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setIsAuthenticated(true);
         localStorage.setItem('user', JSON.stringify(zkUser));
         setLoading(false);
-        console.log('Set authenticated from zkLogin:', zkUser);
+        console.log('Set authenticated from zkLogin context:', zkUser);
         return;
+      }
+
+      // Check wallet state - look for Enoki wallet specifically
+      const enokiWallet = wallets.find(wallet => 
+        wallet.name === 'Enoki' || 
+        (wallet.features && wallet.features['enoki:zklogin'])
+      );
+
+      console.log('enokiWallet found:', enokiWallet);
+
+      if (enokiWallet) {
+        const hasAccounts = Array.isArray(enokiWallet.accounts) && enokiWallet.accounts.length > 0;
+        const hasAddress = hasAccounts && enokiWallet.accounts[0]?.address;
+        console.log('Enoki wallet state:', { hasAccounts, hasAddress, accounts: enokiWallet.accounts });
+
+        if (hasAccounts && hasAddress) {
+          const zkUser = {
+            name: 'zkLogin User',
+            email: 'user@zklogin.sui',
+            zkAddress: enokiWallet.accounts[0].address
+          };
+          setUser(zkUser);
+          setIsAuthenticated(true);
+          localStorage.setItem('user', JSON.stringify(zkUser));
+          setLoading(false);
+          console.log('Set authenticated from Enoki wallet:', zkUser);
+          return;
+        }
       }
 
       // No authentication found
@@ -88,11 +91,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.log('No authentication found, setting as unauthenticated');
     };
 
-    // If we're on the callback page, add a delay to allow Enoki to process
+    // If we're on the callback page, add a longer delay to allow Enoki to process
     if (window.location.pathname === '/auth/callback') {
-      setTimeout(checkAuthState, 2000);
+      console.log('On callback page, waiting for Enoki to complete...');
+      setTimeout(checkAuthState, 3000);
     } else {
-      checkAuthState();
+      // For other pages, still add a small delay to allow wallet initialization
+      setTimeout(checkAuthState, 500);
     }
   }, [zkAuthenticated, currentAddress, wallets, zkSession]);
 
