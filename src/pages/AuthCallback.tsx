@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEnokiFlow } from '@mysten/enoki/react';
@@ -14,6 +15,10 @@ const AuthCallback = () => {
   useEffect(() => {
     const handleCallback = async () => {
       try {
+        console.log('AuthCallback - starting callback handling');
+        console.log('location.hash:', location.hash);
+        console.log('location.search:', location.search);
+
         // Use the fragment (hash) or query string as the callback payload
         let callbackPayload = '';
         if (location.hash && location.hash.length > 1) {
@@ -22,14 +27,19 @@ const AuthCallback = () => {
           callbackPayload = location.search.substring(1); // remove '?'
         }
 
+        console.log('callbackPayload:', callbackPayload);
+
         if (!callbackPayload) {
           throw new Error('No authorization token received');
         }
 
+        console.log('Calling enokiFlow.handleAuthCallback...');
         // Use the Enoki SDK's handleAuthCallback as recommended
         await enokiFlow.handleAuthCallback(callbackPayload);
+        console.log('enokiFlow.handleAuthCallback completed successfully');
 
         setStatus('success');
+        console.log('AuthCallback - success, redirecting to dashboard in 2 seconds');
         setTimeout(() => {
           navigate('/dashboard');
         }, 2000);

@@ -3,16 +3,19 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react'; // Shield is no longer used
+import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth(); // Destructure loading, user might not be needed
+  const { isAuthenticated, loading } = useAuth();
+
+  console.log('ProtectedRoute - isAuthenticated:', isAuthenticated, 'loading:', loading);
 
   if (loading) {
+    console.log('ProtectedRoute - showing loading screen');
     return (
       <div className="min-h-screen bg-black flex items-center justify-center p-4">
         <Card className="bg-gray-900 border-gray-700 w-full max-w-md">
@@ -35,11 +38,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    // Loading is complete, and user is not authenticated
+    console.log('ProtectedRoute - redirecting to home, user not authenticated');
     return <Navigate to="/" replace />;
   }
 
-  // Loading is complete, and user is authenticated
+  console.log('ProtectedRoute - rendering protected content');
   return <>{children}</>;
 };
 

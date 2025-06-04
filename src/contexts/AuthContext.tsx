@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useZkLogin } from './ZkLoginContext';
 import { useWallets } from '@mysten/dapp-kit';
@@ -20,8 +21,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const wallets = useWallets();
 
   useEffect(() => {
-    // Prefer wallet state for authentication
+    console.log('AuthContext useEffect triggered');
+    console.log('zkAuthenticated:', zkAuthenticated);
+    console.log('currentAddress:', currentAddress);
+    console.log('wallets:', wallets);
+    console.log('zkSession:', zkSession);
+
+    // Check for saved user first
+    const savedUser = localStorage.getItem('user');
+    console.log('savedUser from localStorage:', savedUser);
+
+    if (savedUser) {
+      const parsedUser = JSON.parse(savedUser);
+      setUser(parsedUser);
+      setIsAuthenticated(true);
+      setLoading(false);
+      console.log('Set authenticated from localStorage:', parsedUser);
+      return;
+    }
+
+    // Then check wallet state
     const walletWithAddress = wallets.find(wallet => Array.isArray(wallet.accounts) && wallet.accounts[0]?.address);
+    console.log('walletWithAddress:', walletWithAddress);
+
     if (walletWithAddress) {
       const zkUser = {
         name: 'zkLogin User',
@@ -32,15 +54,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsAuthenticated(true);
       localStorage.setItem('user', JSON.stringify(zkUser));
       setLoading(false);
+      console.log('Set authenticated from wallet:', zkUser);
       return;
     }
-    // Fallback to previous logic
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      setUser(JSON.parse(savedUser));
-      setIsAuthenticated(true);
-      setLoading(false);
-    } else if (zkAuthenticated && currentAddress) {
+
+    // Finally check zkLogin state
+    if (zkAuthenticated && currentAddress) {
       const zkUser = {
         name: 'zkLogin User',
         email: 'user@zklogin.sui',
@@ -50,22 +69,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setIsAuthenticated(true);
       localStorage.setItem('user', JSON.stringify(zkUser));
       setLoading(false);
-    } else {
-      setUser(null);
-      setIsAuthenticated(false);
-      setLoading(false);
+      console.log('Set authenticated from zkLogin:', zkUser);
+      return;
     }
-  }, [zkAuthenticated, currentAddress, wallets]);
+
+    // No authentication found
+    setUser(null);
+    setIsAuthenticated(false);
+    setLoading(false);
+    console.log('No authentication found, setting as unauthenticated');
+  }, [zkAuthenticated, currentAddress, wallets, zkSession]);
 
   const login = (email: string, password: string) => {
+    console.log('Traditional login called (not implemented)');
   };
 
   const logout = () => {
+    console.log('Logout called');
     setUser(null);
     setIsAuthenticated(false);
     localStorage.removeItem('user');
     zkLogout();
   };
+
+  console.log('AuthContext rendering with:', { isAuthenticated, user, loading });
 
   return (
     <AuthContext.Provider
