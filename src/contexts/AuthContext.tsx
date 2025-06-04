@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { useZkLogin } from '../hooks/useZkLogin';
+import { useZkLogin } from './ZkLoginContext';
 import { useWallets } from '@mysten/dapp-kit';
 
 interface AuthContextType {
@@ -58,7 +58,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [zkAuthenticated, currentAddress, wallets]);
 
   const login = (email: string, password: string) => {
-    // No demo user logic; real login should be handled by zkLogin or wallet
   };
 
   const logout = () => {
