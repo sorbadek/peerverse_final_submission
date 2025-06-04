@@ -1,7 +1,5 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
-// @ts-expect-error: jwt-decode does not provide a default export in ESM, but this import works at runtime with Vite
-// @ts-expect-error: jwt-decode does not provide a default export in ESM, but this import works at runtime with Vite
 import {jwtDecode} from 'jwt-decode';
 import { useZkLogin } from './ZkLoginContext';
 import { useWallets } from '@mysten/dapp-kit';
@@ -54,10 +52,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
       // Check zkLogin context and use real user info from idToken
       const idToken = localStorage.getItem('zklogin_id_token');
+      console.log('AuthContext: zkAuthenticated', zkAuthenticated);
+      console.log('AuthContext: currentAddress', currentAddress);
+      console.log('AuthContext: idToken from localStorage', idToken);
       if (zkAuthenticated && currentAddress && idToken) {
         let decoded: { name?: string; email?: string; given_name?: string; family_name?: string } = {};
         try {
           decoded = jwtDecode(idToken);
+          console.log('AuthContext: decoded JWT', decoded);
         } catch (e) {
           console.error('Failed to decode idToken', e);
         }
@@ -72,6 +74,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setLoading(false);
         console.log('Set authenticated from zkLogin context:', zkUser);
         return;
+      }
+      if (!idToken) {
+        console.warn('AuthContext: No idToken found in localStorage');
       }
 
       // Check wallet state - look for Enoki wallet specifically

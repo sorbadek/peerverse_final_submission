@@ -1,6 +1,4 @@
-
 import React, { useEffect, useState } from 'react';
-import jwt_decode from 'jwt-decode';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEnokiFlow } from '@mysten/enoki/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,9 +36,52 @@ const AuthCallback = () => {
         // Use the Enoki SDK's handleAuthCallback as recommended
         const session = await enokiFlow.handleAuthCallback(callbackPayload);
         console.log('enokiFlow.handleAuthCallback completed successfully', session);
-        // Defensive: session may be a string or object
-        if (session && typeof session === 'object' && 'idToken' in session && typeof session.idToken === 'string') {
-          localStorage.setItem('zklogin_id_token', session.idToken);
+        
+        // Try to get the JWT from the session or Enoki wallet
+        let jwtToken: string | null = null;
+        
+        // Safely check session for idToken
+        interface AuthSession {
+          idToken?: string;
+          // Add other session properties as needed
+        }
+        
+        const safeSession = session as AuthSession | null;
+        if (safeSession?.idToken) {
+          jwtToken = safeSession.idToken;
+          console.log('Found JWT in session.idToken');
+        } 
+        // If not in session, try to get it from Enoki wallet instance
+        else {
+          console.log('No JWT in session, checking Enoki wallet instance...');
+          try {
+            // Type-safe access to window.enoki
+            interface EnokiState {
+              token?: string;
+              user?: { idToken?: string };
+            }
+            
+            const enokiState = (window as unknown as { enoki?: { state?: EnokiState } })?.enoki?.state;
+            
+            if (enokiState?.token) {
+              jwtToken = enokiState.token;
+              console.log('Found JWT in window.enoki.state.token');
+            } else if (enokiState?.user?.idToken) {
+              jwtToken = enokiState.user.idToken;
+              console.log('Found JWT in window.enoki.state.user.idToken');
+            }
+          } catch (e) {
+            console.warn('Could not access Enoki wallet state:', e);
+          }
+        }
+        
+        if (jwtToken) {
+          localStorage.setItem('zklogin_id_token', jwtToken);
+          console.log('Saved JWT to localStorage');
+        } else {
+          console.warn('No JWT token found in session or Enoki wallet state');
+          // Log the session structure for debugging
+          console.log('Session structure:', JSON.stringify(session, null, 2));
         }
         setStatus('success');
         console.log('AuthCallback - success, redirecting to dashboard in 3 seconds');
