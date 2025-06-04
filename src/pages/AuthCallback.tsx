@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
+import jwt_decode from 'jwt-decode';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useEnokiFlow } from '@mysten/enoki/react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,9 +36,12 @@ const AuthCallback = () => {
 
         console.log('Calling enokiFlow.handleAuthCallback...');
         // Use the Enoki SDK's handleAuthCallback as recommended
-        await enokiFlow.handleAuthCallback(callbackPayload);
-        console.log('enokiFlow.handleAuthCallback completed successfully');
-
+        const session = await enokiFlow.handleAuthCallback(callbackPayload);
+        console.log('enokiFlow.handleAuthCallback completed successfully', session);
+        // Defensive: session may be a string or object
+        if (session && typeof session === 'object' && 'idToken' in session && typeof session.idToken === 'string') {
+          localStorage.setItem('zklogin_id_token', session.idToken);
+        }
         setStatus('success');
         console.log('AuthCallback - success, redirecting to dashboard in 3 seconds');
         

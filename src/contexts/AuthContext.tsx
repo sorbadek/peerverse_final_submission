@@ -1,5 +1,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+// @ts-expect-error: jwt-decode does not provide a default export in ESM, but this import works at runtime with Vite
+// @ts-expect-error: jwt-decode does not provide a default export in ESM, but this import works at runtime with Vite
+import {jwtDecode} from 'jwt-decode';
 import { useZkLogin } from './ZkLoginContext';
 import { useWallets } from '@mysten/dapp-kit';
 
@@ -49,18 +52,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         localStorage.removeItem('user');
       }
 
-      // Check  context first
-      if (zkAuthenticated && currentAddress) {
+      // Check zkLogin context and use real user info from idToken
+      const idToken = localStorage.getItem('zklogin_id_token');
+      if (zkAuthenticated && currentAddress && idToken) {
+        let decoded: { name?: string; email?: string; given_name?: string; family_name?: string } = {};
+        try {
+          decoded = jwtDecode(idToken);
+        } catch (e) {
+          console.error('Failed to decode idToken', e);
+        }
         const zkUser = {
-          name: ' User',
-          email: 'user@zklogin.sui',
+          name: decoded.name || decoded.given_name || decoded.family_name || 'Unknown',
+          email: decoded.email || 'unknown',
           zkAddress: currentAddress
         };
         setUser(zkUser);
         setIsAuthenticated(true);
         localStorage.setItem('user', JSON.stringify(zkUser));
         setLoading(false);
-        console.log('Set authenticated from  context:', zkUser);
+        console.log('Set authenticated from zkLogin context:', zkUser);
         return;
       }
 
