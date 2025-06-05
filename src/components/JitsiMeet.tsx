@@ -1,17 +1,51 @@
-import React, { useEffect, useRef, useCallback, useState, useMemo } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useZkLogin } from '../contexts/ZkLoginContext';
 import { toast } from './ui/use-toast';
+import { cn } from '../lib/utils';
+
+// Jitsi event handler type
+type JitsiEventHandler = (...args: unknown[]) => void;
+
+// Extend the JitsiMeetAPI interface to include the 'on' method
+declare global {
+  interface JitsiMeetAPI {
+    on: (event: string, handler: JitsiEventHandler) => void;
+    off: (event: string, handler: JitsiEventHandler) => void;
+    executeCommand: (command: string, ...args: unknown[]) => void;
+    dispose: () => void;
+    removeEventListener: (event: string, handler: JitsiEventHandler) => void;
+  }
+}
 
 // Jitsi Meet API types
-type JitsiCommand = 'displayName' | 'password' | 'toggleLobby' | 'overwriteConfig' | string;
+type JitsiCommand = 'displayName' | 'password' | 'toggleLobby' | 'overwriteConfig' | 'toggleAudio' | 'toggleVideo' | string;
 type JitsiEvent = 'videoConferenceJoined' | 'videoConferenceLeft' | 'readyToClose' | 'participantJoined' | 'participantLeft' | 'error' | string;
+type JitsiEventHandler = (...args: unknown[]) => void;
 
-interface JitsiMeetAPI {
-  dispose: () => void;
-  executeCommand: (command: JitsiCommand, ...args: unknown[]) => void;
-  addEventListener: (event: JitsiEvent, listener: (...args: unknown[]) => void) => void;
-  removeEventListener: (event: JitsiEvent, listener: (...args: unknown[]) => void) => void;
+// Extended JitsiMeetAPI interface with all required methods
+declare global {
+  interface JitsiMeetAPI {
+    // Core methods
+    dispose: () => void;
+    executeCommand: (command: JitsiCommand, ...args: unknown[]) => void;
+    
+    // Event handling methods (using both 'on/off' and 'addEventListener/removeEventListener' patterns)
+    on: (event: string, handler: JitsiEventHandler) => void;
+    off: (event: string, handler: JitsiEventHandler) => void;
+    addEventListener: (event: string, listener: JitsiEventHandler) => void;
+    removeEventListener: (event: string, listener: JitsiEventHandler) => void;
+    
+    // Additional methods that might be needed
+    isAudioMuted: () => boolean;
+    isVideoMuted: () => boolean;
+    getDisplayName: () => string;
+    getEmail: () => string | null;
+    getRoomName: () => string;
+    
+    // Index signature for dynamic properties
+    [key: string]: unknown;
+  }
 }
 
 interface JitsiMeetAPIOptions {
@@ -40,9 +74,15 @@ interface JitsiMeetAPIOptions {
 
 interface JitsiMeetProps {
   roomName: string;
+  isHost: boolean;
   onClose: () => void;
-  isHost?: boolean;
-  displayName?: string;
+  className?: string;
+  showControls?: boolean;
+  showWatermark?: boolean;
+  showToolbar?: boolean;
+  startWithAudioMuted?: boolean;
+  startWithVideoMuted?: boolean;
+  onReady?: () => void;
 }
 
 interface JitsiParticipant {
@@ -57,146 +97,306 @@ declare global {
   }
 }
 
-const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: JitsiMeetProps): JSX.Element => {
+const JitsiMeet = ({
+  roomName,
+  isHost,
+  onClose,
+  className,
+  showControls = true,
+  showWatermark = false,
+  showToolbar = true,
+  startWithAudioMuted: initialAudioMuted = false,
+  startWithVideoMuted: initialVideoMuted = false,
+  onReady
+}: JitsiMeetProps): JSX.Element => {
   const { user, isAuthenticated } = useAuth();
   const { currentAddress } = useZkLogin();
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<JitsiMeetAPI | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState<boolean>(false);
-  
-  // Memoize Jitsi options to prevent unnecessary re-renders
-  const jitsiOptions = useMemo<JitsiMeetAPIOptions>(() => {
-    let name = displayName;
-    
-    // Fallback name if displayName is not provided
-    if (!name) {
-      if (currentAddress) {
-        name = `User-${currentAddress.slice(0, 6)}`;
-      } else if (user?.name) {
-        name = user.name;
-      } else if (user?.email) {
-        name = user.email.split('@')[0];
-      } else {
-        name = 'Anonymous';
-      }
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Get user display name
+  const getDisplayName = useCallback(() => {
+    if (currentAddress) {
+      return `User-${currentAddress.slice(0, 6)}`;
+    } else if (user?.name) {
+      return user.name;
+    } else if (user?.email) {
+      return user.email.split('@')[0];
     }
-    
-    return {
-      roomName,
-      parentNode: jitsiContainerRef.current,
-      width: '100%',
-      height: '100%',
-      userInfo: {
-        displayName: name,
-        email: user?.email || ''
-      },
-      configOverwrite: {
-        startWithAudioMuted: !isHost,
-        startWithVideoMuted: !isHost,
-        enableWelcomePage: false,
-        enableClosePage: false,
-      },
-      interfaceConfigOverwrite: {
-        TOOLBAR_BUTTONS: [
-          'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
-          'fodeviceselection', 'hangup', 'profile', 'recording',
-          'livestreaming', 'etherpad', 'sharedvideo', 'settings', 'raisehand',
-          'videoquality', 'filmstrip', 'invite', 'feedback', 'stats', 'shortcuts',
-          'tileview', 'videobackgroundblur', 'download', 'help', 'mute-everyone',
-          'security'
-        ],
-        SHOW_JITSI_WATERMARK: false,
-        SHOW_WATERMARK_FOR_GUESTS: false,
-      },
+    return 'Anonymous';
+  }, [currentAddress, user]);
+
+  // Set up event handlers
+  const setupEventHandlers = useCallback((jitsi: JitsiMeetAPI) => {
+    if (!jitsi) return () => {};
+
+    // Type-safe event handlers
+    const handleVideoConferenceJoined = () => {
+      console.log('User joined the conference');
     };
-  }, [roomName, displayName, user?.email, user?.name, currentAddress, isHost]);
 
-  // Initialize Jitsi when script is loaded
-  const initializeJitsi = useCallback(() => {
-    if (!jitsiContainerRef.current || !window.JitsiMeetExternalAPI) {
-      console.error('Jitsi container or API not available');
-      return () => {};
-    }
+    const handleVideoConferenceLeft = () => {
+      console.log('User left the conference');
+      onClose();
+    };
 
-    if (!isAuthenticated) {
-      console.warn('User not authenticated, proceeding as guest');
-    }
+    const handleReadyToClose = () => {
+      console.log('Jitsi is ready to close');
+      onClose();
+    };
 
-    try {
-      apiRef.current = new window.JitsiMeetExternalAPI('meet.jit.si', jitsiOptions);
+    const handleParticipantJoined = (participant: unknown) => {
+      const p = participant as JitsiParticipant;
+      console.log('Participant joined:', p.displayName);
+    };
 
-      // Event handlers
-      const handleVideoConferenceJoined = () => {
-        console.log('User joined the conference');
-      };
+    const handleParticipantLeft = (participant: unknown) => {
+      const p = participant as JitsiParticipant;
+      console.log('Participant left:', p.displayName);
+    };
 
-      const handleVideoConferenceLeft = () => {
-        console.log('User left the conference');
-        onClose();
-      };
-
-      const handleReadyToClose = () => {
-        console.log('Jitsi is ready to close');
-        onClose();
-      };
-
-      const handleParticipantJoined = (participant: JitsiParticipant) => {
-        console.log('Participant joined:', participant.displayName);
-      };
-
-      const handleParticipantLeft = (participant: JitsiParticipant) => {
-        console.log('Participant left:', participant.displayName);
-      };
-
-      const handleError = (error: Error) => {
-        console.error('Jitsi error:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to initialize video call',
-          variant: 'destructive',
-        });
-      };
-
-      // Add event listeners with proper type assertions
-      const listeners = [
-        { event: 'videoConferenceJoined' as const, handler: handleVideoConferenceJoined },
-        { event: 'videoConferenceLeft' as const, handler: handleVideoConferenceLeft },
-        { event: 'readyToClose' as const, handler: handleReadyToClose },
-        { event: 'participantJoined' as const, handler: handleParticipantJoined as (...args: unknown[]) => void },
-        { event: 'participantLeft' as const, handler: handleParticipantLeft as (...args: unknown[]) => void },
-        { event: 'error' as const, handler: handleError as (...args: unknown[]) => void },
-      ];
-
-      // Add all event listeners
-      listeners.forEach(({ event, handler }) => {
-        apiRef.current?.addEventListener(event, handler);
-      });
-
-      // Cleanup functionl
-      return () => {
-        if (apiRef.current) {
-          // Remove all event listeners
-          listeners.forEach(({ event, handler }) => {
-            apiRef.current?.removeEventListener(event, handler);
-          });
-          // Dispose the API
-          apiRef.current.dispose();
-          apiRef.current = null;
-        }
-      };
-    } catch (error) {
-      console.error('Failed to initialize Jitsi:', error);
+    const handleError = (error: unknown) => {
+      console.error('Jitsi error:', error);
       toast({
-        title: 'Error',
-        description: 'Failed to initialize video call',
+        title: 'Conference Error',
+        description: 'An error occurred in the video conference',
         variant: 'destructive',
       });
-      return () => {};
-    }
-  }, [jitsiOptions, isAuthenticated, onClose]);
+    };
 
+    // Add event listeners using the correct method names
+    // The JitsiMeetExternalAPI uses addEventListener/removeEventListener pattern
+    jitsi.addEventListener('videoConferenceJoined', handleVideoConferenceJoined);
+    jitsi.addEventListener('videoConferenceLeft', handleVideoConferenceLeft);
+    jitsi.addEventListener('readyToClose', handleReadyToClose);
+    jitsi.addEventListener('participantJoined', handleParticipantJoined);
+    jitsi.addEventListener('participantLeft', handleParticipantLeft);
+    jitsi.addEventListener('error', handleError);
+
+    // Set initial audio/video states
+    try {
+      jitsi.executeCommand('displayName', getDisplayName());
+      const startWithAudioMuted = initialAudioMuted || !isHost;
+      const startWithVideoMuted = initialVideoMuted || !isHost;
+      jitsi.executeCommand('toggleAudio', startWithAudioMuted);
+      jitsi.executeCommand('toggleVideo', startWithVideoMuted);
+    } catch (error) {
+      console.error('Error setting initial Jitsi state:', error);
+    }
+
+    // Return cleanup function
+    return () => {
+      jitsi.removeEventListener('videoConferenceJoined', handleVideoConferenceJoined);
+      jitsi.removeEventListener('videoConferenceLeft', handleVideoConferenceLeft);
+      jitsi.removeEventListener('readyToClose', handleReadyToClose);
+      jitsi.removeEventListener('participantJoined', handleParticipantJoined);
+      jitsi.removeEventListener('participantLeft', handleParticipantLeft);
+      jitsi.removeEventListener('error', handleError);
+    };
+  }, [onClose, getDisplayName, isHost]);
+
+  // Initialize Jitsi when script is loaded, we have a display name, and container is mounted
   useEffect(() => {
-    if (typeof window === 'undefined' || window.JitsiMeetExternalAPI) {
+    const container = jitsiContainerRef.current;
+    if (!scriptLoaded || !container) return;
+    
+    let jitsiInstance: JitsiMeetAPI | null = null;
+    let cleanupEventHandlers: (() => void) | null = null;
+
+    const initJitsi = async () => {
+      try {
+        // Get display name before initializing Jitsi
+        const displayName = getDisplayName();
+
+        // Create a clean container for Jitsi
+        const jitsiContainer = document.createElement('div');
+        jitsiContainer.style.width = '100%';
+        jitsiContainer.style.height = '100%';
+        jitsiContainer.style.position = 'relative';
+        container.innerHTML = '';
+        container.appendChild(jitsiContainer);
+
+        const options: JitsiMeetAPIOptions = {
+          roomName: roomName,
+          parentNode: jitsiContainer,
+          width: '100%',
+          height: '100%',
+          configOverwrite: {
+            // UI and theming
+            disableTileView: false,
+            tileViewEnabled: true,
+            startWithTileViewEnabled: true,
+            startAudioOnly: false,
+            startWithAudioMuted: initialAudioMuted,
+            startWithVideoMuted: initialVideoMuted,
+            
+            // Branding and UI elements
+            disableProfile: true,
+            disableRemoteMute: !isHost,
+            disableShortcuts: !showControls,
+            
+            // Toolbar customization
+            toolbarButtons: showToolbar ? [
+              'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+              'fodeviceselection', 'hangup', 'profile', 'info', 'chat', 'recording',
+              'livestreaming', 'settings', 'raisehand', 'tileview', 'security'
+            ] : [],
+            
+            // UI elements visibility
+            filmStripOnly: false,
+            
+            // Theme colors
+            defaultRemoteDisplayName: 'Participant',
+            defaultLocalDisplayName: 'You',
+            
+            // Hide watermarks if disabled
+            disableBranding: !showWatermark,
+            
+            // Disable features that might cause warnings
+            disableRtx: true,
+            disableRtpStats: true,
+            disableSimulcast: true,
+            
+            // Performance optimizations
+            enableNoisyMicDetection: false,
+            enableNoAudioDetection: false,
+            startWithAudioMuted: !isHost,
+            startWithVideoMuted: !isHost,
+            enableWelcomePage: false,
+            enableClosePage: false,
+            disableDeepLinking: true,
+            disableInviteFunctions: true,
+            disableRemoteMute: !isHost,
+            enableNoAudioDetection: false,
+            enableNoisyMicDetection: false,
+            enableAutomaticUrlCopy: false,
+            enableInsecureRoomNameWarning: false,
+            prejoinPageEnabled: false,
+            // Disable features that might cause warnings
+            disableRtx: true,
+            disableRtpStats: true,
+            disableSimulcast: false,
+            enableIceRestart: true,
+            enableIceTcp: true,
+            p2p: {
+              enabled: true,
+              preferH264: true,
+              disableH264: false,
+              useStunTurn: true
+            },
+            // Optimize for performance
+            constraints: {
+              video: {
+                height: {
+                  ideal: 720,
+                  max: 720,
+                  min: 180
+                },
+                frameRate: {
+                  max: 30
+                }
+              }
+            },
+            // Toolbar buttons configuration
+            toolbarButtons: [
+              'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
+              'fodeviceselection', 'hangup', 'profile', 'info', 'chat', 'recording',
+              'livestreaming', 'settings', 'raisehand', 'tileview', 'security'
+            ]
+          },
+          interfaceConfigOverwrite: {
+            SHOW_JITSI_WATERMARK: false,
+            SHOW_WATERMARK_FOR_GUESTS: false,
+            SHOW_BRAND_WATERMARK: false,
+            BRAND_WATERMARK_LINK: '',
+            SHOW_POWERED_BY: false,
+            SHOW_PROMOTIONAL_CLOSE_PAGE: false,
+            SHOW_DEEP_LINKING_IMAGE: false,
+            GENERATE_ROOMNAMES_ON_WELCOME_PAGE: false,
+            DISPLAY_WELCOME_PAGE_CONTENT: false,
+            DISPLAY_WELCOME_PAGE_TOOLBAR_ADDITIONAL_CONTENT: false,
+            APP_NAME: 'TutorHub',
+            NATIVE_APP_NAME: 'TutorHub',
+            // Disable features that might cause warnings
+            DISABLE_VIDEO_BACKGROUND: true,
+            DISABLE_JOIN_LEAVE_NOTIFICATIONS: true,
+            DISABLE_PRESENCE_STATUS: true,
+            DISABLE_TRANSCRIPTION_SUBTITLES: true,
+            DISABLE_VIDEO_QUALITY_LABEL: true,
+            MOBILE_APP_PROMO: false,
+            SETTINGS_SECTIONS: ['devices', 'language', 'moderator', 'profile', 'calendar']
+          },
+          userInfo: {
+            displayName,
+            email: ''
+          }
+        };
+
+        // Initialize Jitsi
+        if (!window.JitsiMeetExternalAPI) {
+          throw new Error('Jitsi Meet External API not loaded');
+        }
+
+        try {
+          jitsiInstance = new window.JitsiMeetExternalAPI('meet.jit.si', options);
+          apiRef.current = jitsiInstance;
+
+          // Set up event handlers
+          cleanupEventHandlers = setupEventHandlers(jitsiInstance);
+        } catch (error) {
+          console.error('Failed to initialize Jitsi:', error);
+          toast({
+            title: 'Failed to start video call',
+            description: error instanceof Error ? error.message : 'Could not initialize the video conference',
+            variant: 'destructive',
+          });
+
+          // Clean up any partial initialization
+          if (containerRef.current) {
+            containerRef.current.innerHTML = '';
+          }
+
+          onClose();
+        }
+      } catch (error) {
+        console.error('Error initializing Jitsi:', error);
+      }
+    };
+
+    initJitsi().catch(error => {
+      console.error('Error in Jitsi initialization:', error);
+      onClose();
+    });
+
+    // Cleanup function
+    return () => {
+      // Clean up event handlers
+      if (cleanupEventHandlers) {
+        cleanupEventHandlers();
+      }
+
+      // Clean up Jitsi instance
+      if (jitsiInstance) {
+        try {
+          jitsiInstance.dispose();
+        } catch (error) {
+          console.error('Error disposing Jitsi instance:', error);
+        }
+      }
+      
+      // Clean up container using the stored reference
+      if (containerRef.current) {
+        containerRef.current.innerHTML = '';
+        containerRef.current = null;
+      }
+    };
+  }, [scriptLoaded, roomName, isHost, user?.email, getDisplayName, onClose, setupEventHandlers]);
+
+  // Load Jitsi script
+  useEffect(() => {
+    if (window.JitsiMeetExternalAPI) {
       setScriptLoaded(true);
       return;
     }
@@ -223,15 +423,6 @@ const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: 
       }
     };
   }, []);
-
-  // Initialize Jitsi when script is loaded and we have a display name
-  useEffect(() => {
-    if (scriptLoaded && displayName && displayName !== 'Anonymous') {
-      const cleanup = initializeJitsi();
-      return cleanup;
-    }
-    return undefined;
-  }, [scriptLoaded, displayName, initializeJitsi]);
 
   return <div ref={jitsiContainerRef} style={{ width: '100%', height: '100%' }} />;
 };

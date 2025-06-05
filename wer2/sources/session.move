@@ -1,15 +1,10 @@
+#[allow(duplicate_alias)]
 module learning_platform::session {
-    use sui::object::{Self, UID};
-    use sui::clock;
+    use sui::object::{Self, ID, UID};
     use sui::tx_context::{Self, TxContext};
-    use std::string::{Self, String};
+    use std::string::String;
     use sui::transfer;
     use sui::event;
-    use std::vector;
-    
-    // Use local modules with proper address
-    use learning_platform::user_profile;
-    use learning_platform::xp_marketplace;
     
     // Session states
     const SESSION_STATE_SCHEDULED: u8 = 0;
@@ -22,7 +17,6 @@ module learning_platform::session {
     const E_UNAUTHORIZED: u64 = 2;
     const E_SESSION_FULL: u64 = 3;
     const E_INVALID_STATE: u64 = 4;
-    const E_NOT_PARTICIPANT: u64 = 5;
 
     public struct Session has key, store {
         id: UID,
@@ -64,7 +58,7 @@ module learning_platform::session {
     }
 
     public fun create_session(
-        tutor: &signer,
+        _tutor: &signer,
         title: String,
         description: String,
         start_time: u64,
@@ -103,11 +97,11 @@ module learning_platform::session {
             price_xp,
         });
         
-        transfer::public_share_object(session);
+        transfer::share_object(session);
     }
 
     public fun join_session(
-        participant: &signer,
+        _participant: &signer,
         session: &mut Session,
         ctx: &mut TxContext
     ) {
@@ -148,7 +142,7 @@ module learning_platform::session {
     }
 
     public fun complete_session(
-        tutor: &signer,
+        _tutor: &signer,
         session: &mut Session,
         ctx: &mut TxContext
     ) {
@@ -174,7 +168,7 @@ module learning_platform::session {
     }
 
     public fun cancel_session(
-        tutor: &signer,
+        _tutor: &signer,
         session: &mut Session,
         reason: String,
         ctx: &mut TxContext

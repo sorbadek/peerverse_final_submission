@@ -1,3 +1,4 @@
+#[allow(duplicate_alias)]
 module learning_platform::content {
     // Import standard library and Sui framework modules
     use sui::tx_context::{Self, TxContext};
@@ -115,7 +116,7 @@ module learning_platform::content {
             // This is a placeholder - actual XP check will be implemented
             // when XP module is ready
             assert!(false, E_INSUFFICIENT_XP);
-        }
+        };
         
         // Update last accessed timestamp
         content.updated_at = now;

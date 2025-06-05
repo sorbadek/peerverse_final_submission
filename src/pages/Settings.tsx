@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,17 +12,102 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import { Wallet, Shield, User, Bell, Eye, Upload, X } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
 
 const Settings = () => {
+  const { user, isAuthenticated, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [zkLoginAddress, setZkLoginAddress] = useState('0x742d35Cc6635Cb9532991f5a1e9F27c5d9F542B0');
-  const [userName, setUserName] = useState('Sandro Williams');
+  const [zkLoginAddress, setZkLoginAddress] = useState('');
+  const [userName, setUserName] = useState('');
   const [profilePicture, setProfilePicture] = useState('');
   const [selectedInterests, setSelectedInterests] = useState<string[]>(['defi', 'nfts']);
-  const [autoStakeRewards, setAutoStakeRewards] = useState(true);
   const [notifications, setNotifications] = useState(true);
   const [publicProfile, setPublicProfile] = useState(true);
   const [privacyMode, setPrivacyMode] = useState(false);
+  
+  // Debug: Log current state
+  useEffect(() => {
+    console.log('Current state:', {
+      zkLoginAddress,
+      userName,
+      profilePicture,
+      isAuthenticated,
+      user,
+      notifications,
+      publicProfile,
+      privacyMode
+    });
+  }, [zkLoginAddress, userName, profilePicture, isAuthenticated, user, notifications, publicProfile, privacyMode]);
+
+  // Update local state when user data changes
+  useEffect(() => {
+    // Debug: Log all localStorage items
+    console.log('All localStorage items:', Object.entries(localStorage));
+    
+    let walletAddress = null;
+    
+    // Check for sui-dapp-kit wallet connection info
+    const walletConnectionInfo = localStorage.getItem('sui-dapp-kit:wallet-connection-info');
+    if (walletConnectionInfo) {
+      try {
+        const connectionInfo = JSON.parse(walletConnectionInfo);
+        if (connectionInfo?.state?.lastConnectedAccountAddress) {
+          walletAddress = connectionInfo.state.lastConnectedAccountAddress;
+          console.log('Found wallet address in sui-dapp-kit connection info:', walletAddress);
+        }
+      } catch (e) {
+        console.error('Error parsing wallet connection info:', e);
+      }
+    }
+    
+    // Fallback to checking common keys if not found in sui-dapp-kit
+    if (!walletAddress) {
+      const possibleWalletKeys = [
+        'lastConnectedAccountAddress',
+        'wallet-address',
+        'connected-address',
+        'account-address',
+        'sui-wallet-address',
+        'sui-account-address'
+      ];
+      
+      for (const key of possibleWalletKeys) {
+        const value = localStorage.getItem(key);
+        if (value) {
+          console.log(`Found potential wallet address in ${key}:`, value);
+          walletAddress = value;
+          break;
+        }
+      }
+    }
+    
+    if (walletAddress) {
+      console.log('Setting zkLoginAddress with:', walletAddress);
+      setZkLoginAddress(walletAddress);
+    } else {
+      console.log('No wallet address found in localStorage');
+      // Check if any localStorage key contains 'address' or 'wallet'
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.toLowerCase().includes('address') || key.toLowerCase().includes('wallet'))) {
+          console.log(`Found potential wallet-related key: ${key} = ${localStorage.getItem(key)}`);
+        }
+      }
+    }
+    
+    if (user) {
+      console.log('User data:', user);
+      setUserName(user.name || '');
+      if (user.avatar) {
+        setProfilePicture(user.avatar);
+      }
+    }
+  }, [user]);
+
+  // Debug: Log when zkLoginAddress changes
+  useEffect(() => {
+    console.log('zkLoginAddress updated:', zkLoginAddress);
+  }, [zkLoginAddress]);
 
   const availableInterests = [
     { id: 'defi', label: 'DeFi & Trading' },
@@ -43,10 +128,14 @@ const Settings = () => {
   };
 
   const handleDisconnectZkLogin = () => {
+    // Remove wallet address from localStorage
+    localStorage.removeItem('lastConnectedAccountAddress');
+    logout();
+    setZkLoginAddress('');
     toast({
-      title: "zkLogin disconnected",
-      description: "Your zkLogin session has been disconnected from the platform.",
-      variant: "destructive",
+      title: "Wallet disconnected",
+      description: "Your wallet has been disconnected from the platform.",
+      variant: "default",
     });
   };
 
@@ -117,8 +206,34 @@ const Settings = () => {
                       <Label htmlFor="profile-upload" className="cursor-pointer">
                         <Button variant="outline" className="border-gray-700 text-white hover:bg-gray-800" asChild>
                           <span>
-                            <Upload className="h-4 w-4 mr-2" />
-                            Upload Photo
+                            {zkLoginAddress ? (
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Wallet className="h-4 w-4 text-gray-400" />
+                                  <span className="text-sm text-gray-400">Connected Wallet</span>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-sm font-mono text-gray-300" title={zkLoginAddress}>
+                                    {zkLoginAddress.slice(0, 6)}...{zkLoginAddress.slice(-4)}
+                                  </span>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="sm" 
+                                    className="text-red-500 hover:bg-red-500/10 hover:text-red-400"
+                                    onClick={handleDisconnectZkLogin}
+                                  >
+                                    Disconnect
+                                  </Button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  <Wallet className="h-4 w-4 text-gray-400" />
+                                  <span className="text-sm text-gray-400">No wallet connected</span>
+                                </div>
+                              </div>
+                            )}
                           </span>
                         </Button>
                       </Label>
@@ -228,45 +343,7 @@ const Settings = () => {
               </CardContent>
             </Card>
 
-            {/* Token & Rewards Settings */}
-            <Card className="bg-gray-900 border-gray-700">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-white">
-                  <Eye className="h-5 w-5" />
-                  Rewards & Learning
-                </CardTitle>
-                <CardDescription className="text-gray-400">
-                  Configure how you want to handle your earned tokens and learning rewards
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <Label htmlFor="auto-stake" className="text-white">Auto-stake Learning Rewards</Label>
-                    <p className="text-sm text-gray-400">
-                      Automatically stake earned SUI tokens for additional rewards
-                    </p>
-                  </div>
-                  <Switch
-                    id="auto-stake"
-                    checked={autoStakeRewards}
-                    onCheckedChange={setAutoStakeRewards}
-                  />
-                </div>
-
-                <Separator className="bg-gray-700" />
-
-                <div className="space-y-2">
-                  <Label className="text-white">Minimum Withdrawal Amount</Label>
-                  <div className="flex items-center gap-2">
-                    <Input type="number" placeholder="10" className="w-32 bg-gray-800 border-gray-700 text-white" />
-                    <span className="text-sm text-gray-400">SUI tokens</span>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Privacy & Security */}
+{/* Privacy & Security */}
             <Card className="bg-gray-900 border-gray-700">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white">

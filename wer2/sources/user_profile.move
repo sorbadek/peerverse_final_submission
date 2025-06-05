@@ -1,3 +1,4 @@
+#[allow(duplicate_alias), (unused_alias)]
 module learning_platform::user_profile {
     use sui::object::{Self, UID};
     use sui::tx_context::{Self, TxContext};

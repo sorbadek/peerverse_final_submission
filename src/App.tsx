@@ -98,6 +98,11 @@ const App = () => (
                           <Vault />
                         </ProtectedRoute>
                       } />
+                      <Route path="/public-profile" element={
+                        <ProtectedRoute>
+                          <PublicProfile />
+                        </ProtectedRoute>
+                      } />
                       <Route path="/settings" element={
                         <ProtectedRoute>
                           <Settings />

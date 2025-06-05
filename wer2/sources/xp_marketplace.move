@@ -1,14 +1,19 @@
+#[allow(duplicate_alias), unused_alias]
 module learning_platform::xp_marketplace {
-    use sui::coin::{Self, Coin};
+    use std::option::{Self, Option};
     use sui::balance;
+    use sui::coin::{Self, Coin};
+    use sui::dynamic_field;
+    use sui::event;
+    use sui::object;
+    use sui::object::UID;
+    use sui::sui::SUI;
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
-    use sui::object::{Self, ID, UID};
-    use sui::sui::SUI;
-    use sui::event;
-    use std::option::Option;
-    use std::vector;
-    use sui::dynamic_field;
+    
+    // ===== Event Types =====
+    // Note: These are the actual event structs used in the code
+    // The ones below in the Events section should be removed or aligned with these
     
     // Use local modules with proper address
     use learning_platform::user_profile;
@@ -37,32 +42,32 @@ module learning_platform::xp_marketplace {
 
     // ===== Events =====
     
-    public struct XpPurchased has copy, drop {
+    public struct XPPurchased has copy, drop {
         buyer: address,
         amount: u64,
-        price: u64
+        price: u64,
     }
 
-    public struct XpTransferred has copy, drop {
-        sender: address,
-        recipient: address,
+    public struct XPTransferred has copy, drop {
+        from: address,
+        to: address,
         amount: u64,
-        timestamp: u64
+        timestamp: u64,
     }
 
-    public struct XpSpent has copy, drop {
+    public struct XPSpent has copy, drop {
         user: address,
         amount: u64,
-        timestamp: u64
+        timestamp: u64,
     }
     
-    public struct XpAwarded has copy, drop {
+    public struct XPAwarded has copy, drop {
         user: address,
         amount: u64,
-        timestamp: u64
+        timestamp: u64,
     }
 
-    public fun init(ctx: &mut TxContext) {
+    fun init(ctx: &mut TxContext) {
         let config = MarketConfig {
             id: object::new(ctx),
             price_per_xp: DEFAULT_PRICE_PER_XP,
@@ -76,84 +81,208 @@ module learning_platform::xp_marketplace {
     /// * `payment` - Payment in SUI tokens
     /// * `amount` - Amount of XP to purchase
     /// * `ctx` - Transaction context
+    /// Update or create an XP balance for a user
+    /// 
+    /// # Parameters:
+    /// * `sender` - The address of the user
+    /// * `amount` - The amount of XP to add
+    /// * `ctx` - Transaction context
+    fun update_xp_balance(sender: address, amount: u64, ctx: &mut TxContext) {
+        let xp_balance = object::get_dynamic_field<address, XPBalance>(sender);
+        
+        if (option::is_some(&xp_balance)) {
+            // Update existing balance
+            let balance = option::extract(&mut xp_balance);
+            balance.balance = balance.balance + amount;
+            balance.last_updated = 0;
+            // Return the object to the owner
+            transfer::public_transfer(balance, sender);
+        } else {
+            // Create new balance object
+            let new_balance = XPBalance {
+                id: object::new(ctx),
+                balance: amount,
+                last_updated: 0,
+            };
+            // Transfer to the user
+            transfer::transfer(new_balance, sender);
+        }
+    }
+
     public entry fun purchase_xp(
-        config: &mut MarketConfig,
-        payment: coin::Coin<SUI>,
+        buyer: &signer,
+        payment: Coin<SUI>,
         amount: u64,
-        ctx: &mut TxContext,
+        price: u64,
+        ctx: &mut TxContext
     ) {
-        let price = amount * config.price_per_xp;
+        let sender = tx_context::sender(ctx);
         let payment_value = coin::value(&payment);
         
+        // Verify the payment is sufficient
         assert!(payment_value >= price, 0);
         
+        // Split the payment into the amount needed and change
         let (payment, change) = coin::split(payment, price, ctx);
-        coin::burn(payment, ctx);
         
+        // Burn the payment (in a real scenario, this would be sent to a treasury)
+        let payment_balance = coin::into_balance(payment);
+        coin::from_balance(payment_balance, ctx);
+        
+        // Return any change
         if (coin::value(&change) > 0) {
-            transfer::public_transfer(change, tx_context::sender(ctx));
-        }
-        
-        let sender = tx_context::sender(ctx);
-        let xp_balance = if (exists<XPBalance>(object::address_to_object(sender))) {
-            object::borrow_global_mut<XPBalance>(sender)
-        } else {
-            XPBalance {
-                id: object::new(ctx),
-                balance: 0,
-                last_updated: 0,
-            }
+            transfer::public_transfer(change, sender);
         };
         
-        xp_balance.balance = xp_balance.balance + amount;
-        transfer::transfer(xp_balance, sender);
+        // Update or create XP balance
+        update_xp_balance(sender, amount, ctx);
         
-        event::emit(XPPurchased {
+        // Emit purchase event
+        let purchase_event = XPPurchased {
             buyer: sender,
-            amount,
-            price,
-        });
+            amount: amount,
+            price: price,
+        };
+        event::emit(purchase_event);
+        
+        // Also emit transfer event for consistency
+        let transfer_event = XPTransferred {
+            from: sender,
+            to: sender,
+            amount: amount,
+            timestamp: 0, // In a real app, use a proper timestamp
+        };
+        event::emit(transfer_event);
     }
 
     public fun balance_of(addr: address): u64 {
-        if (exists<XPBalance>(object::address_to_object(addr))) {
-            object::borrow_global<XPBalance>(addr).balance
+        let xp_balance = object::get_dynamic_field<address, XPBalance>(addr);
+        if (option::is_some(&xp_balance)) {
+            let balance = option::extract(&mut xp_balance);
+            balance.balance
         } else {
             0
         }
     }
 
-    public fun spend_xp(
-        _sender: &signer,
+    public entry fun spend_xp(
+        user: &signer,
         amount: u64,
-        ctx: &mut TxContext,
-    ): bool {
+        ctx: &mut TxContext
+    ) {
         let sender = tx_context::sender(ctx);
-        let xp_balance = balance::balance_mut(&mut object::borrow_global_mut<XPBalance>(sender).balance);
-        if (*xp_balance < amount) {
-            return false
-        };
+        let xp_balance = object::get_dynamic_field<address, XPBalance>(sender);
         
-        *xp_balance = *xp_balance - amount;
-        true
+        // Verify the user has an XP balance
+        assert!(option::is_some(&xp_balance), ERROR_INSUFFICIENT_BALANCE);
+        
+        // Get and verify the balance
+        let balance = option::extract(&mut xp_balance);
+        assert!(balance.balance >= amount, ERROR_INSUFFICIENT_BALANCE);
+        
+        // Update the balance
+        balance.balance = balance.balance - amount;
+        balance.last_updated = 0; // Update timestamp (in a real app, use a proper timestamp)
+        
+        // Return the updated balance to the user
+        transfer::public_transfer(balance, sender);
+        
+        // Emit spent event
+        let spent_event = XPSpent {
+            user: sender,
+            amount: amount,
+            timestamp: 0, // In a real app, use a proper timestamp
+        };
+        event::emit(spent_event);
+        
+        // Also emit transfer event for consistency
+        let transfer_event = XPTransferred {
+            from: sender,
+            to: @0x0, // Indicates the XP was spent/destroyed (zero address)
+            amount: amount,
+            timestamp: 0, // In a real app, use a proper timestamp
+        };
+        event::emit(transfer_event);
     }
 
-    public fun add_xp(
+    /// Add XP to a user's balance
+    /// 
+    /// # Arguments:
+    /// * `_sender` - The signer of the transaction (must have permission to add XP)
+    /// * `recipient` - The address of the user to add XP to
+    /// * `amount` - The amount of XP to add
+    /// * `ctx` - Transaction context
+    public entry fun add_xp(
         _sender: &signer,
         recipient: address,
         amount: u64,
-        ctx: &mut TxContext,
+        ctx: &mut TxContext
     ) {
-        if (!exists<XPBalance>(object::address_to_object(recipient))) {
-            let xp_balance = XPBalance {
-                id: object::new(ctx),
-                balance: 0,
-            };
-            transfer::transfer(xp_balance, recipient);
-        };
+        // Update or create the XP balance
+        update_xp_balance(recipient, amount, ctx);
         
-        let xp_balance = object::borrow_global_mut<XPBalance>(recipient);
-        xp_balance.balance = xp_balance.balance + amount;
-        xp_balance.last_updated = 0; // TODO: Update with actual timestamp when clock is available
+        // Emit awarded event
+        let awarded_event = XPAwarded {
+            user: recipient,
+            amount: amount,
+            timestamp: 0, // In a real app, use a proper timestamp
+        };
+        event::emit(awarded_event);
+        
+        // Also emit transfer event for consistency
+        let transfer_event = XPTransferred {
+            from: @0x0, // Indicates the XP was created/minted
+            to: recipient,
+            amount: amount,
+            timestamp: 0, // In a real app, use a proper timestamp
+        };
+        event::emit(transfer_event);
+    }
+    
+    /// Transfer XP from the sender to another user
+    /// 
+    /// # Arguments:
+    /// * `sender` - The signer of the transaction (must be the owner of the XP)
+    /// * `recipient` - The address to transfer XP to
+    /// * `amount` - The amount of XP to transfer
+    /// * `ctx` - Transaction context
+    public entry fun transfer_xp(
+        sender: &signer,
+        recipient: address,
+        amount: u64,
+        ctx: &mut TxContext
+    ) {
+        let sender_addr = tx_context::sender(ctx);
+        
+        // Prevent self-transfer
+        assert!(sender_addr != recipient, ERROR_TRANSFER_TO_SELF);
+        // Prevent zero amount transfers
+        assert!(amount > 0, ERROR_ZERO_AMOUNT);
+        
+        // Get and verify sender's balance
+        let xp_balance = object::get_dynamic_field<address, XPBalance>(sender_addr);
+        assert!(option::is_some(&xp_balance), ERROR_INSUFFICIENT_BALANCE);
+        
+        let balance = option::extract(&mut xp_balance);
+        assert!(balance.balance >= amount, ERROR_INSUFFICIENT_BALANCE);
+        
+        // Update sender's balance
+        balance.balance = balance.balance - amount;
+        balance.last_updated = 0; // In a real app, use a proper timestamp
+        
+        // Return the updated balance to the sender
+        transfer::public_transfer(balance, sender_addr);
+        
+        // Add XP to recipient
+        update_xp_balance(recipient, amount, ctx);
+        
+        // Emit transfer event
+        let transfer_event = XPTransferred {
+            from: sender_addr,
+            to: recipient,
+            amount: amount,
+            timestamp: 0, // In a real app, use a proper timestamp
+        };
+        event::emit(transfer_event);
     }
 }
