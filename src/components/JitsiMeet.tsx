@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useCallback, useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useZkLogin } from '../contexts/ZkLoginContext';
 import { toast } from './ui/use-toast';
-import { cn } from '../lib/utils';
 
 // Jitsi event handler type
 type JitsiEventHandler = (...args: unknown[]) => void;
@@ -74,15 +73,9 @@ interface JitsiMeetAPIOptions {
 
 interface JitsiMeetProps {
   roomName: string;
-  isHost: boolean;
   onClose: () => void;
-  className?: string;
-  showControls?: boolean;
-  showWatermark?: boolean;
-  showToolbar?: boolean;
-  startWithAudioMuted?: boolean;
-  startWithVideoMuted?: boolean;
-  onReady?: () => void;
+  isHost?: boolean;
+  displayName?: string;
 }
 
 interface JitsiParticipant {
@@ -97,27 +90,17 @@ declare global {
   }
 }
 
-const JitsiMeet = ({
-  roomName,
-  isHost,
-  onClose,
-  className,
-  showControls = true,
-  showWatermark = false,
-  showToolbar = true,
-  startWithAudioMuted: initialAudioMuted = false,
-  startWithVideoMuted: initialVideoMuted = false,
-  onReady
-}: JitsiMeetProps): JSX.Element => {
+const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: JitsiMeetProps): JSX.Element => {
   const { user, isAuthenticated } = useAuth();
   const { currentAddress } = useZkLogin();
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<JitsiMeetAPI | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState(true);
-
+  
   // Get user display name
   const getDisplayName = useCallback(() => {
+    if (displayName) return displayName;
+    
     if (currentAddress) {
       return `User-${currentAddress.slice(0, 6)}`;
     } else if (user?.name) {
@@ -126,7 +109,7 @@ const JitsiMeet = ({
       return user.email.split('@')[0];
     }
     return 'Anonymous';
-  }, [currentAddress, user]);
+  }, [displayName, currentAddress, user]);
 
   // Set up event handlers
   const setupEventHandlers = useCallback((jitsi: JitsiMeetAPI) => {
@@ -178,10 +161,8 @@ const JitsiMeet = ({
     // Set initial audio/video states
     try {
       jitsi.executeCommand('displayName', getDisplayName());
-      const startWithAudioMuted = initialAudioMuted || !isHost;
-      const startWithVideoMuted = initialVideoMuted || !isHost;
-      jitsi.executeCommand('toggleAudio', startWithAudioMuted);
-      jitsi.executeCommand('toggleVideo', startWithVideoMuted);
+      jitsi.executeCommand('toggleAudio', isHost);
+      jitsi.executeCommand('toggleVideo', isHost);
     } catch (error) {
       console.error('Error setting initial Jitsi state:', error);
     }
@@ -197,10 +178,16 @@ const JitsiMeet = ({
     };
   }, [onClose, getDisplayName, isHost]);
 
+  // Store container reference to avoid closure issues
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
   // Initialize Jitsi when script is loaded, we have a display name, and container is mounted
   useEffect(() => {
     const container = jitsiContainerRef.current;
     if (!scriptLoaded || !container) return;
+    
+    // Store container reference
+    containerRef.current = container;
     
     let jitsiInstance: JitsiMeetAPI | null = null;
     let cleanupEventHandlers: (() => void) | null = null;
@@ -215,8 +202,8 @@ const JitsiMeet = ({
         jitsiContainer.style.width = '100%';
         jitsiContainer.style.height = '100%';
         jitsiContainer.style.position = 'relative';
-        container.innerHTML = '';
-        container.appendChild(jitsiContainer);
+        containerRef.current.innerHTML = '';
+        containerRef.current.appendChild(jitsiContainer);
 
         const options: JitsiMeetAPIOptions = {
           roomName: roomName,
@@ -224,44 +211,6 @@ const JitsiMeet = ({
           width: '100%',
           height: '100%',
           configOverwrite: {
-            // UI and theming
-            disableTileView: false,
-            tileViewEnabled: true,
-            startWithTileViewEnabled: true,
-            startAudioOnly: false,
-            startWithAudioMuted: initialAudioMuted,
-            startWithVideoMuted: initialVideoMuted,
-            
-            // Branding and UI elements
-            disableProfile: true,
-            disableRemoteMute: !isHost,
-            disableShortcuts: !showControls,
-            
-            // Toolbar customization
-            toolbarButtons: showToolbar ? [
-              'microphone', 'camera', 'closedcaptions', 'desktop', 'fullscreen',
-              'fodeviceselection', 'hangup', 'profile', 'info', 'chat', 'recording',
-              'livestreaming', 'settings', 'raisehand', 'tileview', 'security'
-            ] : [],
-            
-            // UI elements visibility
-            filmStripOnly: false,
-            
-            // Theme colors
-            defaultRemoteDisplayName: 'Participant',
-            defaultLocalDisplayName: 'You',
-            
-            // Hide watermarks if disabled
-            disableBranding: !showWatermark,
-            
-            // Disable features that might cause warnings
-            disableRtx: true,
-            disableRtpStats: true,
-            disableSimulcast: true,
-            
-            // Performance optimizations
-            enableNoisyMicDetection: false,
-            enableNoAudioDetection: false,
             startWithAudioMuted: !isHost,
             startWithVideoMuted: !isHost,
             enableWelcomePage: false,
