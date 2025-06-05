@@ -98,8 +98,11 @@ const Settings = () => {
     if (user) {
       console.log('User data:', user);
       setUserName(user.name || '');
-      if (user.avatar) {
-        setProfilePicture(user.avatar);
+      // Check for profile picture in user object or localStorage
+      const userWithAvatar = user as { avatar?: string };
+      const userProfilePic = userWithAvatar.avatar || localStorage.getItem('userProfilePicture');
+      if (userProfilePic) {
+        setProfilePicture(userProfilePic);
       }
     }
   }, [user]);
@@ -210,21 +213,9 @@ const Settings = () => {
                               <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
                                   <Wallet className="h-4 w-4 text-gray-400" />
-                                  <span className="text-sm text-gray-400">Connected Wallet</span>
+                                  <span className="text-sm text-gray-400">Upload</span>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-mono text-gray-300" title={zkLoginAddress}>
-                                    {zkLoginAddress.slice(0, 6)}...{zkLoginAddress.slice(-4)}
-                                  </span>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="sm" 
-                                    className="text-red-500 hover:bg-red-500/10 hover:text-red-400"
-                                    onClick={handleDisconnectZkLogin}
-                                  >
-                                    Disconnect
-                                  </Button>
-                                </div>
+          
                               </div>
                             ) : (
                               <div className="flex items-center justify-between">

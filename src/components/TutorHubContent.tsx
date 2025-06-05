@@ -10,6 +10,7 @@ import CertificateNotification from './CertificateNotification';
 import { useCertificates } from '../hooks/useCertificates';
 import { useToast } from './ui/use-toast';
 import { useSession } from '@/hooks/useSession';
+import { useSuiSessions } from '@/hooks/useSuiSessions';
 import { OngoingSession as SessionType } from '@/types/session';
 
 interface OngoingSession extends SessionType {
@@ -27,6 +28,38 @@ const TutorHubContent = () => {
   const { issueCertificate } = useCertificates();
   const { toast } = useToast();
   const { activeSessions, removeActiveSession } = useSession();
+  const { sessions: blockchainSessions, isLoading } = useSuiSessions();
+
+  // Define the expected session type from the blockchain
+  interface BlockchainSession {
+    id: string;
+    owner: string;
+    title: string;
+    description: string;
+    category: string;
+    duration: string;
+    room_name: string;
+    created_at: string;
+  }
+
+  // Convert blockchain sessions to the expected format
+  const formattedBlockchainSessions = useMemo(() => 
+    (blockchainSessions as BlockchainSession[] || []).map((session) => ({
+      id: `sui_${session.id}`,
+      title: session.title,
+      description: session.description,
+      category: session.category,
+      duration: session.duration,
+      host: session.owner,
+      hostName: session.owner,
+      participants: 0, // Will be updated when users join
+      roomName: session.room_name,
+      startTime: session.created_at,
+      isLive: true,
+      isHost: session.owner === activeSessions.find(s => s.roomName === session.room_name)?.hostName
+    })),
+    [blockchainSessions, activeSessions]
+  );
 
   // Convert activeSessions to the expected format
   const ongoingSessions: OngoingSession[] = useMemo(() => 
@@ -49,8 +82,14 @@ const TutorHubContent = () => {
     [activeSessions]
   );
 
-  // Only show active sessions
-  const displaySessions = ongoingSessions;
+  // Combine active sessions with blockchain sessions, removing duplicates
+  const displaySessions = useMemo(() => {
+    const activeRoomNames = new Set(activeSessions.map(s => s.roomName));
+    const uniqueBlockchainSessions = formattedBlockchainSessions.filter(
+      session => !activeRoomNames.has(session.roomName)
+    );
+    return [...ongoingSessions, ...uniqueBlockchainSessions];
+  }, [ongoingSessions, formattedBlockchainSessions, activeSessions]);
 
   const handleSessionCompletion = (session: OngoingSession) => {
     // If it's an active session, remove it
@@ -170,24 +209,43 @@ const TutorHubContent = () => {
           </TabsTrigger>
         </TabsList>
         
-        <TabsContent value="ongoing" className="mt-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {filteredSessions.map(session => (
-              <OngoingSessionCard 
-                key={session.id} 
+        <div className="flex flex-col space-y-4">
+        {isLoading ? (
+          <div className="text-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+            <p className="mt-4 text-gray-400">Loading sessions from blockchain...</p>
+          </div>
+        ) : filteredSessions.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredSessions.map((session) => (
+              <OngoingSessionCard
+                key={session.id}
                 session={session}
+                onComplete={() => handleSessionCompletion(session)}
               />
             ))}
           </div>
-          
-          {filteredSessions.length === 0 && (
-            <div className="text-center py-12">
-              <Users className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-              <p className="text-gray-400 text-lg">No ongoing sessions found matching your criteria.</p>
-              <p className="text-gray-500 mt-2">Be the first to start a session!</p>
+        ) : (
+          <div className="text-center py-12">
+            <Video className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-sm font-medium text-gray-200">No sessions found</h3>
+            <p className="mt-1 text-sm text-gray-400">
+              {searchTerm || selectedCategory !== 'all' 
+                ? 'Try adjusting your search or filter criteria.' 
+                : 'Be the first to start a session!'}
+            </p>
+            <div className="mt-6">
+              <Button
+                onClick={() => setShowHostDialog(true)}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                <Plus className="-ml-1 mr-2 h-5 w-5" />
+                Host a Session
+              </Button>
             </div>
-          )}
-        </TabsContent>
+          </div>
+        )}
+      </div>
         
         <TabsContent value="schedule" className="mt-6">
           <div className="text-center py-12">

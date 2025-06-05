@@ -3,7 +3,9 @@ import { useAuth } from '../hooks/useAuth';
 import { useZkLogin } from '../contexts/ZkLoginContext';
 import { toast } from './ui/use-toast';
 
-// Jitsi event handler type
+// Jitsi Meet API types
+type JitsiCommand = 'displayName' | 'password' | 'toggleLobby' | 'overwriteConfig' | 'toggleAudio' | 'toggleVideo' | string;
+type JitsiEvent = 'videoConferenceJoined' | 'videoConferenceLeft' | 'readyToClose' | 'participantJoined' | 'participantLeft' | 'error' | string;
 type JitsiEventHandler = (...args: unknown[]) => void;
 
 // Extend the JitsiMeetAPI interface to include the 'on' method
@@ -11,16 +13,11 @@ declare global {
   interface JitsiMeetAPI {
     on: (event: string, handler: JitsiEventHandler) => void;
     off: (event: string, handler: JitsiEventHandler) => void;
-    executeCommand: (command: string, ...args: unknown[]) => void;
+    executeCommand: (command: JitsiCommand, ...args: unknown[]) => void;
     dispose: () => void;
     removeEventListener: (event: string, handler: JitsiEventHandler) => void;
   }
 }
-
-// Jitsi Meet API types
-type JitsiCommand = 'displayName' | 'password' | 'toggleLobby' | 'overwriteConfig' | 'toggleAudio' | 'toggleVideo' | string;
-type JitsiEvent = 'videoConferenceJoined' | 'videoConferenceLeft' | 'readyToClose' | 'participantJoined' | 'participantLeft' | 'error' | string;
-type JitsiEventHandler = (...args: unknown[]) => void;
 
 // Extended JitsiMeetAPI interface with all required methods
 declare global {

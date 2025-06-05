@@ -15,6 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Textarea } from './ui/textarea';
 import { Video, Users, Clock } from 'lucide-react';
 import { useSession } from '@/hooks/useSession';
+import { useSuiSessions } from '@/hooks/useSuiSessions';
 import { toast } from '@/hooks/use-toast';
 
 interface HostSessionDialogProps {
@@ -24,6 +25,7 @@ interface HostSessionDialogProps {
 
 const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
   const { startSession, addActiveSession } = useSession();
+  const { createSession, isCreating } = useSuiSessions();
   const [sessionData, setSessionData] = useState({
     title: '',
     description: '',
@@ -42,63 +44,73 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
     return `tutorHub_${sanitizedTitle}_${timestamp}`;
   };
 
-  const handleCreateSession = () => {
+  const handleCreateSession = async () => {
     if (!isFormValid) return;
 
     const roomName = generateRoomName(sessionData.title);
+    const createdAt = new Date().toISOString();
     
-    // Create session object
-    const session = {
-      id: `session_${Date.now()}`,
-      roomName: roomName,
-      title: sessionData.title,
-      isHost: true
-    };
+    try {
+      // Store session on Sui blockchain
+      await createSession({
+        ...sessionData,
+        roomName,
+        createdAt,
+      });
 
-    // Save session data to localStorage for persistence
-    const sessionInfo = {
-      ...sessionData,
-      roomName,
-      createdAt: new Date().toISOString(),
-      isActive: true
-    };
-    
-    localStorage.setItem(`session_${session.id}`, JSON.stringify(sessionInfo));
+      // Create local session object
+      const session = {
+        id: `session_${Date.now()}`,
+        roomName: roomName,
+        title: sessionData.title,
+        isHost: true
+      };
 
-    // Add to active sessions and get the room name
-    const ongoingSession = addActiveSession({
-      title: sessionData.title,
-      hostName: 'You', // In a real app, this would come from user context
-      participants: 1,
-      category: sessionData.category,
-      duration: sessionData.duration,
-      description: sessionData.description,
-      startTime: new Date().toISOString()
-    });
+      // Add to active sessions
+      const ongoingSession = addActiveSession({
+        title: sessionData.title,
+        hostName: 'You', // In a real app, this would come from user context
+        participants: 1,
+        category: sessionData.category,
+        duration: sessionData.duration,
+        description: sessionData.description,
+        startTime: createdAt
+      });
 
-    if (!ongoingSession) {
-      console.error('Failed to create active session');
-      return;
+      if (!ongoingSession) {
+        console.error('Failed to create active session');
+        return;
+      }
+
+      // Start the Jitsi session with the generated room name and required properties
+      const sessionToStart: OngoingSession = {
+        ...session,
+        ...ongoingSession,
+        hostName: 'You', // This should come from auth context in a real app
+        participants: 1,
+        category: sessionData.category,
+        duration: sessionData.duration,
+        description: sessionData.description,
+        startTime: createdAt
+      };
+      startSession(sessionToStart);
+      
+      // Show success toast
+      toast({
+        title: "Session Started!",
+        description: `Your live session "${sessionData.title}" is now active and stored on the blockchain.`,
+      });
+      
+      // Close the dialog
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Failed to create session on blockchain:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create session on the blockchain. Please try again.",
+      });
     }
-
-    // Start the Jitsi session with the generated room name and required properties
-    const sessionToStart: OngoingSession = {
-      ...session,
-      ...ongoingSession,
-      hostName: 'You', // This should come from auth context in a real app
-      participants: 1,
-      category: sessionData.category,
-      duration: sessionData.duration,
-      description: sessionData.description,
-      startTime: new Date().toISOString()
-    };
-    startSession(sessionToStart);
-    
-    // Show success toast
-    toast({
-      title: "Session Started!",
-      description: `Your live session "${sessionData.title}" is now active.`,
-    });
 
     // Close dialog and reset form
     onOpenChange(false);
@@ -217,12 +229,12 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
           >
             Cancel
           </Button>
-          <Button
-            onClick={handleCreateSession}
+          <Button 
+            onClick={handleCreateSession} 
+            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
             disabled={!isFormValid}
-            className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
           >
-            Start Live Session
+            Create Session
           </Button>
         </div>
       </DialogContent>

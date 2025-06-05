@@ -55,7 +55,7 @@ const MarketplaceContent = () => {
       type: 'PDF Collection',
       category: 'Programming',
       author: 'Sarah Chen',
-      authorAvatar: '//a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
+      authorAvatar: '/image/a8e6790e-ddf9-4561-8b5d-9181ba1ce938.png',
       rating: 4.8,
       views: 1250,
       bookmarks: 342,
