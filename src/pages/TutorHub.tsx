@@ -3,7 +3,8 @@ import React, { useState } from 'react';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import TutorHubContent from '../components/TutorHubContent';
-import { SessionProvider, useSession } from '../components/SessionManager';
+import { SessionProvider} from '../components/SessionManager';
+import { useSession } from '@/hooks/useSession';
 import JitsiMeet from '../components/JitsiMeet';
 
 const TutorHubInner = () => {

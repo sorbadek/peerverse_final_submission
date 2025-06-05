@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import { OngoingSession } from '../types/session';
 import { 
   Dialog, 
   DialogContent, 
@@ -13,7 +14,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
 import { Video, Users, Clock } from 'lucide-react';
-import { useSession } from './SessionManager';
+import { useSession } from '@/hooks/useSession';
 import { toast } from '@/hooks/use-toast';
 
 interface HostSessionDialogProps {
@@ -22,7 +23,7 @@ interface HostSessionDialogProps {
 }
 
 const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
-  const { startSession } = useSession();
+  const { startSession, addActiveSession } = useSession();
   const [sessionData, setSessionData] = useState({
     title: '',
     description: '',
@@ -64,8 +65,34 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
     
     localStorage.setItem(`session_${session.id}`, JSON.stringify(sessionInfo));
 
-    // Start the Jitsi session
-    startSession(session);
+    // Add to active sessions and get the room name
+    const ongoingSession = addActiveSession({
+      title: sessionData.title,
+      hostName: 'You', // In a real app, this would come from user context
+      participants: 1,
+      category: sessionData.category,
+      duration: sessionData.duration,
+      description: sessionData.description,
+      startTime: new Date().toISOString()
+    });
+
+    if (!ongoingSession) {
+      console.error('Failed to create active session');
+      return;
+    }
+
+    // Start the Jitsi session with the generated room name and required properties
+    const sessionToStart: OngoingSession = {
+      ...session,
+      ...ongoingSession,
+      hostName: 'You', // This should come from auth context in a real app
+      participants: 1,
+      category: sessionData.category,
+      duration: sessionData.duration,
+      description: sessionData.description,
+      startTime: new Date().toISOString()
+    };
+    startSession(sessionToStart);
     
     // Show success toast
     toast({

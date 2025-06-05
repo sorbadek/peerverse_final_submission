@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Video, Users, Plus, Clock, Star, TrendingUp, Award } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -9,16 +9,12 @@ import XPContributionTracker from './XPContributionTracker';
 import CertificateNotification from './CertificateNotification';
 import { useCertificates } from '../hooks/useCertificates';
 import { useToast } from './ui/use-toast';
+import { useSession } from '@/hooks/useSession';
+import { OngoingSession as SessionType } from '@/types/session';
 
-interface OngoingSession {
-  id: string;
-  title: string;
+interface OngoingSession extends SessionType {
   host: string;
-  participants: number;
-  category: string;
-  duration: string;
   isLive: boolean;
-  description: string;
 }
 
 const TutorHubContent = () => {
@@ -30,54 +26,40 @@ const TutorHubContent = () => {
   
   const { issueCertificate } = useCertificates();
   const { toast } = useToast();
+  const { activeSessions, removeActiveSession } = useSession();
 
-  const ongoingSessions: OngoingSession[] = [
-    {
-      id: '1',
-      title: 'React Hooks Deep Dive',
-      host: 'Sarah Chen',
-      participants: 12,
-      category: 'Frontend',
-      duration: '45 min',
-      isLive: true,
-      description: 'Exploring advanced React hooks patterns and custom hook creation'
-    },
-    {
-      id: '2',
-      title: 'Data Structures Problem Solving',
-      host: 'Mike Rodriguez',
-      participants: 8,
-      category: 'Computer Science',
-      duration: '60 min',
-      isLive: true,
-      description: 'Collaborative problem solving session for common data structure challenges'
-    },
-    {
-      id: '3',
-      title: 'UI/UX Design Critique',
-      host: 'Emma Johnson',
-      participants: 15,
-      category: 'Design',
-      duration: '30 min',
-      isLive: true,
-      description: 'Peer review and feedback session for design portfolios'
-    },
-    {
-      id: '4',
-      title: 'Node.js API Development',
-      host: 'David Park',
-      participants: 6,
-      category: 'Backend',
-      duration: '90 min',
-      isLive: true,
-      description: 'Building RESTful APIs with Express and best practices'
-    }
-  ];
+  // Convert activeSessions to the expected format
+  const ongoingSessions: OngoingSession[] = useMemo(() => 
+    activeSessions.map((session) => ({
+      ...session,
+      host: session.hostName, // Add host as an alias for hostName
+      isLive: true, // Add isLive flag
+      // Ensure all required properties from OngoingSession are included
+      id: session.id,
+      roomName: session.roomName,
+      title: session.title,
+      hostName: session.hostName,
+      participants: session.participants,
+      category: session.category,
+      duration: session.duration,
+      description: session.description,
+      startTime: session.startTime,
+      isHost: session.isHost || false
+    })),
+    [activeSessions]
+  );
+
+  // Only show active sessions
+  const displaySessions = ongoingSessions;
 
   const handleSessionCompletion = (session: OngoingSession) => {
+    // If it's an active session, remove it
+    if (activeSessions.some(s => s.id === session.id)) {
+      removeActiveSession(session.id);
+    }
     // Calculate XP based on session duration and type
     const durationMinutes = parseInt(session.duration);
-    let xpEarned = Math.max(50, Math.floor(durationMinutes * 2)); // Base 2 XP per minute, minimum 50
+    const xpEarned = Math.max(50, Math.floor(durationMinutes * 2)); // Base 2 XP per minute, minimum 50
 
     // Issue certificate for completed session
     const certificate = issueCertificate({
@@ -104,9 +86,9 @@ const TutorHubContent = () => {
 
   const categories = ['all', 'Frontend', 'Backend', 'Design', 'Computer Science', 'Mobile'];
 
-  const filteredSessions = ongoingSessions.filter(session => {
+  const filteredSessions = displaySessions.filter(session => {
     const matchesSearch = session.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         session.description.toLowerCase().includes(searchTerm.toLowerCase());
+                       session.description.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || session.category === selectedCategory;
     
     return matchesSearch && matchesCategory;

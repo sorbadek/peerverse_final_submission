@@ -2,23 +2,18 @@
 import React from 'react';
 import { Users, Clock, Star, Play } from 'lucide-react';
 import { Button } from './ui/button';
-import { useSession } from './SessionManager';
+import { useSession } from '@/hooks/useSession';
 import { toast } from '@/hooks/use-toast';
+import { OngoingSession } from '@/types/session';
 
-interface OngoingSession {
-  id: string;
-  title: string;
+interface SessionCardProps extends Omit<OngoingSession, 'hostName' | 'startTime' | 'isHost'> {
   host: string;
-  participants: number;
-  category: string;
-  duration: string;
   isLive: boolean;
-  description: string;
 }
 
 interface OngoingSessionCardProps {
-  session: OngoingSession;
-  onComplete?: (session: OngoingSession) => void;
+  session: SessionCardProps;
+  onComplete?: (session: SessionCardProps) => void;
 }
 
 const OngoingSessionCard = ({ session, onComplete }: OngoingSessionCardProps) => {
@@ -31,13 +26,15 @@ const OngoingSessionCard = ({ session, onComplete }: OngoingSessionCardProps) =>
 
   const handleJoinSession = () => {
     const roomName = generateRoomName(session.id);
+    const now = new Date().toISOString();
     
-    // Create session object for joining
-    const joinSession = {
-      id: session.id,
-      roomName: roomName,
-      title: session.title,
-      isHost: false
+    // Create session object for joining with all required properties
+    const joinSession: OngoingSession = {
+      ...session,
+      hostName: session.host,
+      startTime: now,
+      isHost: false,
+      roomName: roomName
     };
 
     // Start the Jitsi session as participant

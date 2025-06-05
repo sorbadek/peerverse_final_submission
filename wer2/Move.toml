@@ -1,0 +1,8 @@
+[package]
+name = "learning_platform"
+version = "0.1.0"
+edition = "2024.beta"
+
+[addresses]
+learning_platform = "0x0"
+
