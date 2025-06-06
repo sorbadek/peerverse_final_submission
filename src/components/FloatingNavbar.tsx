@@ -1,11 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
-import { Menu, X } from 'lucide-react';
+import { Menu, X, LayoutDashboard } from 'lucide-react';
 import ZkLoginButton from '@/components/ZkLoginButton';
+import { useAuth } from '@/hooks/useAuth';
 
 const FloatingNavbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -37,6 +38,7 @@ const FloatingNavbar = () => {
     { label: 'About', href: '#about' },
     { label: 'Features', href: '#features' },
     { label: 'Community', href: '#community' },
+    ...(isAuthenticated ? [{ label: 'Dashboard', href: '/dashboard' }] : []),
   ];
 
   return (
@@ -68,9 +70,12 @@ const FloatingNavbar = () => {
               <a
                 key={item.label}
                 href={item.href}
-                onClick={(e) => handleSmoothScroll(e, item.href)}
-                className="text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer"
+                onClick={(e) => item.href.startsWith('#') ? handleSmoothScroll(e, item.href) : undefined}
+                className={`text-gray-300 hover:text-white transition-colors duration-200 text-sm font-medium cursor-pointer flex items-center ${
+                  item.label === 'Dashboard' ? 'gap-1' : ''
+                }`}
               >
+                {item.label === 'Dashboard' && <LayoutDashboard className="h-4 w-4" />}
                 {item.label}
               </a>
             ))}
@@ -94,9 +99,12 @@ const FloatingNavbar = () => {
                 <a
                   key={item.label}
                   href={item.href}
-                  onClick={(e) => handleSmoothScroll(e, item.href)}
-                  className="block px-3 py-2 text-gray-300 hover:text-white transition-colors duration-200 cursor-pointer"
+                  onClick={(e) => item.href.startsWith('#') ? handleSmoothScroll(e, item.href) : undefined}
+                  className={`block px-3 py-2 text-gray-300 hover:text-white transition-colors duration-200 cursor-pointer flex items-center ${
+                    item.label === 'Dashboard' ? 'gap-2' : ''
+                  }`}
                 >
+                  {item.label === 'Dashboard' && <LayoutDashboard className="h-4 w-4" />}
                   {item.label}
                 </a>
               ))}
