@@ -1,4 +1,4 @@
-#[allow(duplicate_alias), unused_alias]
+#[allow(duplicate_alias), (unused_alias)]
 module wer2::xp_marketplace {
     use std::option::{Self, Option};
     use sui::balance;
