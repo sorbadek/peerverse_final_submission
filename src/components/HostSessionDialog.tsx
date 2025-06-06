@@ -1,4 +1,5 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -25,6 +26,7 @@ interface HostSessionDialogProps {
 
 const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
   const { startSession, addActiveSession } = useSession();
+  const navigate = useNavigate();
   const { createSession, wallet, isConnected, walletAddress, isLoading: isSessionLoading } = useSuiSessions();
   const { currentAddress, isAuthenticated, isLoading: isZkLoginLoading } = useZkLogin();
   const [isInitializing, setIsInitializing] = React.useState(true);
@@ -146,6 +148,9 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
         description: `Your live session "${sessionData.title}" is now active and stored on the blockchain.`,
       });
       
+      // Navigate to the JitsiMeet component with the roomId
+      navigate(`/session/${roomName}`);
+      
       onOpenChange(false);
       setSessionData({
         title: '',
@@ -163,7 +168,7 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
     } finally {
       setIsSubmitting(false);
     }
-  }, [sessionData, isSubmitting, currentAddress, onOpenChange, createSession, addActiveSession, startSession, isConnected, isAuthenticated, walletAddress, isInitializing]);
+  }, [sessionData, isSubmitting, currentAddress, onOpenChange, createSession, addActiveSession, startSession, isConnected, isAuthenticated, walletAddress, isInitializing, navigate]);
 
   const isFormValid = Boolean(
     sessionData.title && 

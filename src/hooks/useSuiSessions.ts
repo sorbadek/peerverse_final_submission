@@ -170,7 +170,7 @@ export function useSuiSessions() {
 
   // Create a new session
   const createSession = useMutation({
-    mutationFn: async (sessionData: SessionData) => {
+    mutationFn: async (sessionData: SessionData): Promise<{ sessionId: string }> => {
       console.log('Creating session with data:', sessionData);
   
       if (!walletAddress || !currentAccount) {

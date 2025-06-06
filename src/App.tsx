@@ -23,6 +23,7 @@ import Settings from "./pages/Settings";
 import PublicProfile from "./pages/PublicProfile";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
+import JitsiMeet from "./components/JitsiMeet";
 
 const queryClient = new QueryClient();
 
@@ -96,6 +97,13 @@ const App = () => (
                       <Route path="/vault" element={
                         <ProtectedRoute>
                           <Vault />
+                        </ProtectedRoute>
+                      } />
+                      <Route path="/session/:roomId" element={
+                        <ProtectedRoute>
+                          <div className="w-full h-screen">
+                            <JitsiMeet onClose={() => window.history.back()} roomId={window.location.pathname.split('/').pop() || ''} />
+                          </div>
                         </ProtectedRoute>
                       } />
                       <Route path="/public-profile" element={
