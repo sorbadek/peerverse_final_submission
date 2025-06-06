@@ -6,8 +6,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SuiClient } from '@mysten/sui/client';
 import { useZkLogin } from '../contexts/ZkLoginContext';
 
-const SESSION_PACKAGE_ID = "0x613d35a6bcd70a655da0bfeb5110a7ff4c535dc936e9da66dad0568d90f3e604";
-const SESSION_STORE_OBJECT_ID = "0x2902c1eca0f69acb40443262b8de7aef5774fd76b18060cd8bc23f73caa05318";
+const SESSION_PACKAGE_ID = "0x3126d451831200a73bd29fb45608867123d6ed0c6b1032c958a187b9385a163c"
+;
+const SESSION_STORE_OBJECT_ID = "0xda8d0ff61cbd2867daf68520bedfe24d65bff05c8e11bf098ab207b7ac98f2bb"
+;
 
 export interface SessionData {
   title: string;
@@ -151,107 +153,98 @@ export function useSuiSessions() {
   const createSession = useMutation({
     mutationFn: async (sessionData: SessionData) => {
       console.log('Creating session with data:', sessionData);
-      console.log('Auth state - isAuthenticated:', isAuthenticated);
-      console.log('Wallet state - currentAddress:', currentAddress);
-      
-      // Check if wallet is connected
+  
       if (!walletAddress) {
         throw new Error('Please connect your wallet first');
       }
-      
-      // Ensure we have all required fields
-      if (!sessionData.title || !sessionData.description || !sessionData.category || 
-          !sessionData.duration || !sessionData.roomName || !sessionData.createdAt) {
+
+      // Verify that the connected wallet is the owner of the session store
+      try {
+        const sessionStore = await suiClient.getObject({
+          id: SESSION_STORE_OBJECT_ID,
+          options: { showOwner: true },
+        });
+
+        const ownerAddress = sessionStore.data?.owner?.AddressOwner;
+        if (walletAddress !== ownerAddress) {
+          throw new Error(`You must be the owner of the session store to create a session. Current owner: ${ownerAddress}, Your address: ${walletAddress}`);
+        }
+      } catch (error) {
+        console.error('Error verifying session store ownership:', error);
+        throw new Error('Failed to verify session store ownership');
+      }
+  
+      // Validate required fields
+      if (
+        !sessionData.title ||
+        !sessionData.description ||
+        !sessionData.category ||
+        !sessionData.duration ||
+        !sessionData.roomName ||
+        !sessionData.createdAt
+      ) {
         throw new Error('Missing required session data');
       }
+  
       try {
-        const tx = new Transaction();
-        
-
-
-        // Helper function to convert strings to Uint8Array
-        const toUint8Array = (str: string): Uint8Array => {
-          return new TextEncoder().encode(str);
-        };
-
-        // Get current timestamp in seconds
-        const now = Math.floor(Date.now() / 1000);
-        
-        // Create a move call with the correct parameters
-        // The signer is automatically added as the first argument by the SDK
-        
-        // Create the transaction with properly typed arguments
         const txb = new Transaction();
-        
-        // Create the move call with properly typed arguments
+  
         txb.moveCall({
-          target: `${SESSION_PACKAGE_ID}::session::create_session`,
-          typeArguments: [],
+          target: `${SESSION_PACKAGE_ID}::session_manager::create_session`,
           arguments: [
+            txb.object(SESSION_STORE_OBJECT_ID), // session_store: &mut SessionStore
+            txb.pure.address(walletAddress),     // ctx: &mut TxContext
             txb.pure.string(sessionData.title),
             txb.pure.string(sessionData.description),
-            txb.pure.u64(BigInt(now)),
-            txb.pure.u64(BigInt(parseInt(sessionData.duration))),
-            txb.pure.u64(10n),  // max_participants
-            txb.pure.u64(0n),    // price_xp
+            txb.pure.string(sessionData.category),
+            txb.pure.string(sessionData.duration),
+            txb.pure.string(sessionData.roomName),
+            txb.pure.string(sessionData.createdAt),
           ],
         });
         
-        console.log('Transaction created with data:', {
-          target: `${SESSION_PACKAGE_ID}::session::create_session`,
-          title: sessionData.title,
-          description: sessionData.description,
-          startTime: now,
-          duration: sessionData.duration,
-          maxParticipants: 10,
-          priceXp: 0,
-        });
-
-        // Set the gas budget
-        txb.setGasBudget(10000000);
-        
-        console.log('Submitting transaction...');
-        
-        try {
-          // For zkLogin, we don't need to pass an account to signAndExecuteTransaction
-          // as it's handled by the zkLogin provider
-          const result = await new Promise((resolve, reject) => {
-            signAndExecuteTransaction(
-              {
-                transaction: txb,
-                chain: 'sui:devnet',
+        // Set a reasonable gas budget
+        txb.setGasBudget(10_000_000);
+  
+        console.log('Submitting transaction with signer:', walletAddress);
+        const result = await new Promise((resolve, reject) => {
+          signAndExecuteTransaction(
+            {
+              transaction: txb,
+              chain: 'sui:devnet',
+              account: currentAccount,
+              options: {
+                showEffects: true,
+                showEvents: true,
               },
-              {
-                onSuccess: (result) => {
-                  console.log('Transaction executed successfully:', result);
-                  resolve(result);
-                },
-                onError: (error) => {
-                  console.error('Error executing transaction:', error);
-                  reject(error);
-                },
-              }
-            );
-          });
-          
-          // Invalidate and refetch the sessions query after successful transaction
-          await queryClient.invalidateQueries({ queryKey: ['suiSessions'] });
-          return result;
-          
-        } catch (error) {
-          console.error('Error in transaction execution:', error);
-          throw error;
-        }
+            },
+            {
+              onSuccess: (result) => {
+                console.log('Transaction success:', result);
+                resolve(result);
+              },
+              onError: (error) => {
+                console.error('Transaction error:', error);
+                reject(error);
+              },
+            }
+          );
+        });
+  
+        // Refetch sessions after successful transaction
+        await queryClient.invalidateQueries({ queryKey: ['suiSessions'] });
+  
+        return result;
       } catch (error) {
         console.error('Error creating session:', error);
         throw error;
       }
     },
     onSuccess: () => {
-      // Invalidate and refetch
       queryClient.invalidateQueries({ queryKey: ['suiSessions'] });
     },
   });
+  
 
   return {
     sessions: suiSessions,

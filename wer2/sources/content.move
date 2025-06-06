@@ -1,5 +1,5 @@
 #[allow(duplicate_alias)]
-module learning_platform::content {
+module wer2::content {
     // Import standard library and Sui framework modules
     use sui::tx_context::{Self, TxContext};
     use sui::object::{Self, UID, ID};

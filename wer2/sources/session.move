@@ -1,5 +1,5 @@
 #[allow(duplicate_alias)]
-module learning_platform::session {
+module wer2::session {
     use sui::object::{Self, ID, UID};
     use sui::tx_context::{Self, TxContext};
     use std::string::String;

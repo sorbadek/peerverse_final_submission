@@ -1,5 +1,5 @@
 #[allow(duplicate_alias), unused_alias]
-module learning_platform::xp_marketplace {
+module wer2::xp_marketplace {
     use std::option::{Self, Option};
     use sui::balance;
     use sui::coin::{Self, Coin};
@@ -16,7 +16,7 @@ module learning_platform::xp_marketplace {
     // The ones below in the Events section should be removed or aligned with these
     
     // Use local modules with proper address
-    use learning_platform::user_profile;
+    use wer2::user_profile;
 
     // ===== Constants =====
     const ERROR_INSUFFICIENT_BALANCE: u64 = 1;
