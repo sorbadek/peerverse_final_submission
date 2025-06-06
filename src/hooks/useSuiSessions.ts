@@ -1,8 +1,8 @@
-import { useSuiClient, useSignAndExecuteTransaction } from '@mysten/dapp-kit';
+import React from 'react';
+import { useSuiClient, useSignAndExecuteTransaction, useCurrentAccount, useConnectWallet, useWallets } from '@mysten/dapp-kit';
+import { isEnokiWallet } from '@mysten/enoki';
 import { Transaction } from '@mysten/sui/transactions';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { fromB64 } from '@mysten/sui/utils';
-import { toB64 } from '@mysten/bcs';
 import type { SuiClient } from '@mysten/sui/client';
 import { useZkLogin } from '../contexts/ZkLoginContext';
 
@@ -45,60 +45,48 @@ export interface SessionData {
 
 export function useSuiSessions() {
   const suiClient = useSuiClient();
-  const { isAuthenticated, currentAddress, logout: zkLogout } = useZkLogin();
+  const { isAuthenticated, currentAddress } = useZkLogin();
+  const currentAccount = useCurrentAccount();
+  const { mutate: connect } = useConnectWallet();
+  
+  // Get stored wallet connection info from localStorage
+  const getStoredConnectionInfo = React.useCallback(() => {
+    try {
+      const connectionInfo = localStorage.getItem('sui-dapp-kit:wallet-connection-info');
+      if (!connectionInfo) return null;
+      const { state } = JSON.parse(connectionInfo);
+      return {
+        address: state?.lastConnectedAccountAddress,
+        walletName: state?.lastConnectedWalletName
+      };
+    } catch (error) {
+      console.error('Error parsing stored connection info:', error);
+      return null;
+    }
+  }, []);
+  
+  const storedConnectionInfo = React.useMemo(() => getStoredConnectionInfo(), [getStoredConnectionInfo]);
+  
+  const wallets = useWallets();
+  
+  // Initialize wallet connection for zkLogin if needed
+  React.useEffect(() => {
+    if (storedConnectionInfo?.walletName?.startsWith('enoki:') && !currentAccount) {
+      const enokiWallet = wallets.find(isEnokiWallet);
+      if (enokiWallet) {
+        connect({ wallet: enokiWallet });
+      }
+    }
+  }, [storedConnectionInfo, currentAccount, connect, wallets]);
+  
   const { mutate: signAndExecuteTransaction, isPending } = useSignAndExecuteTransaction({
     onError: (error) => {
       console.error('Transaction error:', error);
     },
   });
   
-  // Try to get wallet address from multiple sources
-  const getWalletAddress = () => {
-    // First, try the current address from zkLogin
-    if (currentAddress) return currentAddress;
-    
-    // Then try to get it from localStorage
-    try {
-      // Check for sui-dapp-kit connection info
-      const walletConnectionInfo = localStorage.getItem('sui-dapp-kit:wallet-connection-info');
-      if (walletConnectionInfo) {
-        const connectionInfo = JSON.parse(walletConnectionInfo);
-        if (connectionInfo?.state?.lastConnectedAccountAddress) {
-          return connectionInfo.state.lastConnectedAccountAddress;
-        }
-      }
-      
-      // Check for other common localStorage keys
-      const possibleWalletKeys = [
-        'lastConnectedAccountAddress',
-        'wallet-address',
-        'connected-address',
-        'account-address',
-        'sui-wallet-address',
-        'sui-account-address'
-      ];
-      
-      for (const key of possibleWalletKeys) {
-        const value = localStorage.getItem(key);
-        if (value) return value;
-      }
-      
-      // Check if any key contains 'address' or 'wallet'
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.toLowerCase().includes('address') || key.toLowerCase().includes('wallet'))) {
-          const value = localStorage.getItem(key);
-          if (value) return value;
-        }
-      }
-    } catch (error) {
-      console.error('Error getting wallet address from localStorage:', error);
-    }
-    
-    return null;
-  };
-  
-  const walletAddress = getWalletAddress();
+  // Get wallet address from current zkLogin, connected account, or stored connection
+  const walletAddress = currentAddress || currentAccount?.address || storedConnectionInfo?.address;
   const queryClient = useQueryClient();
 
   // Fetch sessions from the blockchain
@@ -186,56 +174,74 @@ export function useSuiSessions() {
           return new TextEncoder().encode(str);
         };
 
-        // Create a move call with properly encoded string arguments
-        tx.moveCall({
-          target: `${SESSION_PACKAGE_ID}::session_manager::create_session`,
+        // Get current timestamp in seconds
+        const now = Math.floor(Date.now() / 1000);
+        
+        // Create a move call with the correct parameters
+        // The signer is automatically added as the first argument by the SDK
+        
+        // Create the transaction with properly typed arguments
+        const txb = new Transaction();
+        
+        // Create the move call with properly typed arguments
+        txb.moveCall({
+          target: `${SESSION_PACKAGE_ID}::session::create_session`,
+          typeArguments: [],
           arguments: [
-            tx.object(SESSION_STORE_OBJECT_ID),
-            tx.pure(toUint8Array(sessionData.title)),
-            tx.pure(toUint8Array(sessionData.description)),
-            tx.pure(toUint8Array(sessionData.category)),
-            tx.pure(toUint8Array(sessionData.duration)),
-            tx.pure(toUint8Array(sessionData.roomName)),
-            tx.pure(toUint8Array(sessionData.createdAt)),
+            txb.pure.string(sessionData.title),
+            txb.pure.string(sessionData.description),
+            txb.pure.u64(BigInt(now)),
+            txb.pure.u64(BigInt(parseInt(sessionData.duration))),
+            txb.pure.u64(10n),  // max_participants
+            txb.pure.u64(0n),    // price_xp
           ],
         });
         
-        // Set the gas budget
-        tx.setGasBudget(10000000);
-
-        // Sign and execute the transaction
-        return new Promise((resolve, reject) => {
-          signAndExecuteTransaction(
-            { transaction: tx },
-            {
-              onSuccess: async ({ digest }) => {
-                try {
-                  console.log('Transaction successful:', digest);
-                  // Wait for transaction to be included in a checkpoint
-                  const { effects } = await suiClient.waitForTransaction({
-                    digest,
-                    options: {
-                      showEffects: true,
-                    },
-                  });
-                  console.log('Transaction effects:', effects);
-                  
-                  // Invalidate and refetch the sessions query
-                  await queryClient.invalidateQueries({ queryKey: ['suiSessions'] });
-                  
-                  resolve(effects);
-                } catch (error) {
-                  console.error('Error in transaction success handler:', error);
-                  reject(error);
-                }
-              },
-              onError: (error) => {
-                console.error('Transaction failed:', error);
-                reject(error);
-              },
-            }
-          );
+        console.log('Transaction created with data:', {
+          target: `${SESSION_PACKAGE_ID}::session::create_session`,
+          title: sessionData.title,
+          description: sessionData.description,
+          startTime: now,
+          duration: sessionData.duration,
+          maxParticipants: 10,
+          priceXp: 0,
         });
+
+        // Set the gas budget
+        txb.setGasBudget(10000000);
+        
+        console.log('Submitting transaction...');
+        
+        try {
+          // For zkLogin, we don't need to pass an account to signAndExecuteTransaction
+          // as it's handled by the zkLogin provider
+          const result = await new Promise((resolve, reject) => {
+            signAndExecuteTransaction(
+              {
+                transaction: txb,
+                chain: 'sui:devnet',
+              },
+              {
+                onSuccess: (result) => {
+                  console.log('Transaction executed successfully:', result);
+                  resolve(result);
+                },
+                onError: (error) => {
+                  console.error('Error executing transaction:', error);
+                  reject(error);
+                },
+              }
+            );
+          });
+          
+          // Invalidate and refetch the sessions query after successful transaction
+          await queryClient.invalidateQueries({ queryKey: ['suiSessions'] });
+          return result;
+          
+        } catch (error) {
+          console.error('Error in transaction execution:', error);
+          throw error;
+        }
       } catch (error) {
         console.error('Error creating session:', error);
         throw error;
@@ -253,7 +259,8 @@ export function useSuiSessions() {
     error,
     createSession: createSession.mutateAsync,
     refetch,
-    isConnected: isAuthenticated,
+    isConnected: !!currentAccount || !!currentAddress,
     walletAddress: walletAddress,
+    wallet: currentAccount,
   };
 }

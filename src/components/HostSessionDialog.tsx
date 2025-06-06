@@ -1,9 +1,8 @@
-
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
-import { OngoingSession } from '../types/session';
+import type { OngoingSession } from '../types/session';
 import { 
   Dialog, 
   DialogContent, 
@@ -13,10 +12,11 @@ import {
 } from './ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Textarea } from './ui/textarea';
-import { Video, Users, Clock } from 'lucide-react';
+import { Video, Users, Clock, Loader2 } from 'lucide-react';
 import { useSession } from '@/hooks/useSession';
-import { useSuiSessions } from '@/hooks/useSuiSessions';
+import { useSuiSessions, type SessionData } from '@/hooks/useSuiSessions';
 import { toast } from '@/hooks/use-toast';
+import { useZkLogin } from '@/contexts/ZkLoginContext';
 
 interface HostSessionDialogProps {
   open: boolean;
@@ -25,105 +25,154 @@ interface HostSessionDialogProps {
 
 const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
   const { startSession, addActiveSession } = useSession();
-  const { createSession, isCreating } = useSuiSessions();
-  const [sessionData, setSessionData] = useState({
+  const { createSession, wallet, isConnected, walletAddress, isLoading: isSessionLoading } = useSuiSessions();
+  const { currentAddress, isAuthenticated, isLoading: isZkLoginLoading } = useZkLogin();
+  const [isInitializing, setIsInitializing] = React.useState(true);
+  
+  // Check if we're still initializing the wallet connection
+  React.useEffect(() => {
+    if (!isSessionLoading && !isZkLoginLoading) {
+      setIsInitializing(false);
+    }
+  }, [isSessionLoading, isZkLoginLoading]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [sessionData, setSessionData] = useState<Omit<SessionData, 'roomName' | 'createdAt'>>({
     title: '',
     description: '',
     category: '',
     duration: '',
-    maxParticipants: ''
   });
 
   const categories = ['Frontend', 'Backend', 'Design', 'Computer Science', 'Mobile', 'DevOps'];
   const durations = ['30 min', '45 min', '60 min', '90 min', '120 min'];
 
   const generateRoomName = (title: string) => {
-    // Create a unique room name based on title and timestamp
     const sanitizedTitle = title.toLowerCase().replace(/[^a-z0-9]/g, '');
     const timestamp = Date.now();
     return `tutorHub_${sanitizedTitle}_${timestamp}`;
   };
 
-  const handleCreateSession = async () => {
-    if (!isFormValid) return;
+  const getWalletAddress = useCallback(() => {
+    try {
+      const walletConnectionInfo = localStorage.getItem('sui-dapp-kit:wallet-connection-info');
+      if (walletConnectionInfo) {
+        const { state } = JSON.parse(walletConnectionInfo);
+        return state?.lastConnectedAccountAddress || null;
+      }
+    } catch (error) {
+      console.error('Error getting wallet from localStorage:', error);
+    }
+    return null;
+  }, []);
+
+  const handleCreateSession = useCallback(async () => {
+    const formIsValid = Boolean(
+      sessionData.title && 
+      sessionData.description && 
+      sessionData.category && 
+      sessionData.duration
+    );
+    
+    if (!formIsValid || isSubmitting) return;
+    
+    // Check authentication (zkLogin or wallet)
+    if (isInitializing) {
+      toast({
+        title: 'Initializing...',
+        description: 'Please wait while we connect to your wallet.',
+      });
+      return;
+    }
+    
+    if (!isConnected && !isAuthenticated) {
+      toast({
+        title: 'Authentication Required',
+        description: 'Please sign in with zkLogin or connect your wallet to create a session.',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     const roomName = generateRoomName(sessionData.title);
     const createdAt = new Date().toISOString();
     
+    setIsSubmitting(true);
+    
     try {
-      // Store session on Sui blockchain
-      await createSession({
+      const address = walletAddress || currentAddress;
+      if (!address) {
+        throw new Error('No address found. Please sign in or connect your wallet first.');
+      }
+
+      const sessionDataForBlockchain = {
         ...sessionData,
         roomName,
         createdAt,
-      });
+      };
+      
+      await createSession(sessionDataForBlockchain);
 
-      // Create local session object
       const session = {
         id: `session_${Date.now()}`,
-        roomName: roomName,
+        roomName,
         title: sessionData.title,
+        isHost: true,
+        owner: currentAddress,
+      };
+
+      const sessionToStart: OngoingSession = {
+        id: Date.now().toString(), // Generate a temporary ID
+        title: sessionData.title,
+        roomName,
+        hostName: 'You',
+        participants: 1,
+        category: sessionData.category,
+        duration: sessionData.duration,
+        description: sessionData.description,
+        startTime: createdAt,
         isHost: true
       };
 
-      // Add to active sessions
-      const ongoingSession = addActiveSession({
-        title: sessionData.title,
-        hostName: 'You', // In a real app, this would come from user context
-        participants: 1,
-        category: sessionData.category,
-        duration: sessionData.duration,
-        description: sessionData.description,
-        startTime: createdAt
-      });
+      const ongoingSession = addActiveSession(sessionToStart);
 
       if (!ongoingSession) {
-        console.error('Failed to create active session');
-        return;
+        throw new Error('Failed to create active session');
       }
 
-      // Start the Jitsi session with the generated room name and required properties
-      const sessionToStart: OngoingSession = {
-        ...session,
-        ...ongoingSession,
-        hostName: 'You', // This should come from auth context in a real app
-        participants: 1,
-        category: sessionData.category,
-        duration: sessionData.duration,
-        description: sessionData.description,
-        startTime: createdAt
-      };
       startSession(sessionToStart);
       
-      // Show success toast
       toast({
-        title: "Session Started!",
+        title: 'Session Started!',
         description: `Your live session "${sessionData.title}" is now active and stored on the blockchain.`,
       });
       
-      // Close the dialog
       onOpenChange(false);
-    } catch (error) {
-      console.error('Failed to create session on blockchain:', error);
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to create session on the blockchain. Please try again.",
+      setSessionData({
+        title: '',
+        description: '',
+        category: '',
+        duration: '',
       });
+    } catch (error) {
+      console.error('Failed to create session:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to create session. Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
+  }, [sessionData, isSubmitting, currentAddress, onOpenChange, createSession, addActiveSession, startSession, isConnected, isAuthenticated, walletAddress, isInitializing]);
 
-    // Close dialog and reset form
-    onOpenChange(false);
-    setSessionData({
-      title: '',
-      description: '',
-      category: '',
-      duration: '',
-      maxParticipants: ''
-    });
-  };
-
-  const isFormValid = sessionData.title && sessionData.description && sessionData.category && sessionData.duration;
+  const isFormValid = Boolean(
+    sessionData.title && 
+    sessionData.description && 
+    sessionData.category && 
+    sessionData.duration
+  );
+  
+  const isLoading = isSubmitting;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -164,7 +213,10 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-gray-300">Category</Label>
-              <Select value={sessionData.category} onValueChange={(value) => setSessionData({ ...sessionData, category: value })}>
+              <Select 
+                value={sessionData.category} 
+                onValueChange={(value) => setSessionData({ ...sessionData, category: value })}
+              >
                 <SelectTrigger className="bg-gray-800 border-gray-700 text-white mt-1">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>
@@ -180,7 +232,10 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
 
             <div>
               <Label className="text-gray-300">Duration</Label>
-              <Select value={sessionData.duration} onValueChange={(value) => setSessionData({ ...sessionData, duration: value })}>
+              <Select 
+                value={sessionData.duration} 
+                onValueChange={(value) => setSessionData({ ...sessionData, duration: value })}
+              >
                 <SelectTrigger className="bg-gray-800 border-gray-700 text-white mt-1">
                   <SelectValue placeholder="Duration" />
                 </SelectTrigger>
@@ -193,21 +248,6 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <div>
-            <Label htmlFor="maxParticipants" className="text-gray-300 flex items-center">
-              <Users className="mr-1 h-4 w-4" />
-              Max Participants
-            </Label>
-            <Input
-              id="maxParticipants"
-              type="number"
-              placeholder="20"
-              value={sessionData.maxParticipants}
-              onChange={(e) => setSessionData({ ...sessionData, maxParticipants: e.target.value })}
-              className="bg-gray-800 border-gray-700 text-white mt-1"
-            />
           </div>
 
           <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3">
@@ -226,15 +266,23 @@ const HostSessionDialog = ({ open, onOpenChange }: HostSessionDialogProps) => {
             variant="outline"
             onClick={() => onOpenChange(false)}
             className="flex-1 border-gray-700 text-gray-300 hover:bg-gray-800"
+            disabled={isLoading}
           >
             Cancel
           </Button>
           <Button 
             onClick={handleCreateSession} 
-            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white"
-            disabled={!isFormValid}
+            disabled={!isFormValid || isLoading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white"
           >
-            Create Session
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Creating...
+              </>
+            ) : (
+              'Start Session'
+            )}
           </Button>
         </div>
       </DialogContent>

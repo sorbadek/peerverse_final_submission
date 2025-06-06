@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useCallback, useState } from 'react';
+import React, { useEffect, useRef, useCallback, useState, useLayoutEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useZkLogin } from '../contexts/ZkLoginContext';
 import { toast } from './ui/use-toast';
@@ -92,8 +92,25 @@ const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: 
   const { currentAddress } = useZkLogin();
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<JitsiMeetAPI | null>(null);
-  const [scriptLoaded, setScriptLoaded] = useState<boolean>(false);
-  
+  const [scriptLoaded, setScriptLoaded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Check for mobile on mount and window resize
+  useLayoutEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    // Initial check
+    checkIfMobile();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkIfMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
+
   // Get user display name
   const getDisplayName = useCallback(() => {
     if (displayName) return displayName;
@@ -370,7 +387,36 @@ const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: 
     };
   }, []);
 
-  return <div ref={jitsiContainerRef} style={{ width: '100%', height: '100%' }} />;
+  // Base styles for all devices
+  const containerStyles: React.CSSProperties = {
+    width: '100%',
+    height: '100vh', // Full viewport height minus header
+    minHeight: '500px',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)'
+  };
+
+  // Mobile-specific styles
+  if (isMobile) {
+    containerStyles.position = 'fixed';
+    containerStyles.top = 0;
+    containerStyles.left = 0;
+    containerStyles.right = 0;
+    containerStyles.bottom = 0;
+    containerStyles.height = '100vh';
+    containerStyles.width = '100vw';
+    containerStyles.borderRadius = 0;
+    containerStyles.zIndex = 50;
+  }
+
+  return (
+    <div 
+      ref={jitsiContainerRef} 
+      style={containerStyles}
+      className={`jitsi-container ${isMobile ? 'mobile' : ''}`}
+    />
+  );
 };
 
 export default JitsiMeet;
