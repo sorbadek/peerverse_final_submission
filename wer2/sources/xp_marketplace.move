@@ -1,12 +1,12 @@
-#[allow(duplicate_alias), (unused_alias)]
+#[allow(duplicate_alias)]
+#[allow(unused_alias)]
 module wer2::xp_marketplace {
     use std::option::{Self, Option};
-    use sui::balance;
+    use sui::balance::{Self, Balance};
     use sui::coin::{Self, Coin};
-    use sui::dynamic_field;
+    use sui::dynamic_field as df;
     use sui::event;
-    use sui::object;
-    use sui::object::UID;
+    use sui::object::{Self, UID};
     use sui::sui::SUI;
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
@@ -88,15 +88,19 @@ module wer2::xp_marketplace {
     /// * `amount` - The amount of XP to add
     /// * `ctx` - Transaction context
     fun update_xp_balance(sender: address, amount: u64, ctx: &mut TxContext) {
-        let xp_balance = object::get_dynamic_field<address, XPBalance>(sender);
+        let xp_balance_opt = df::get<address, XPBalance>(sender);
         
-        if (option::is_some(&xp_balance)) {
+        if (option::is_some(&xp_balance_opt)) {
             // Update existing balance
-            let balance = option::extract(&mut xp_balance);
-            balance.balance = balance.balance + amount;
-            balance.last_updated = 0;
-            // Return the object to the owner
-            transfer::public_transfer(balance, sender);
+            let balance = option::extract(&mut xp_balance_opt);
+            let XPBalance { id, balance: current_balance, last_updated: _ } = balance;
+            let updated_balance = XPBalance {
+                id,
+                balance: current_balance + amount,
+                last_updated: 0,
+            };
+            // Return the updated object to the owner
+            transfer::public_transfer(updated_balance, sender);
         } else {
             // Create new balance object
             let new_balance = XPBalance {
@@ -123,16 +127,16 @@ module wer2::xp_marketplace {
         assert!(payment_value >= price, 0);
         
         // Split the payment into the amount needed and change
-        let (payment, change) = coin::split(payment, price, ctx);
+        let payment_coin = coin::split(payment, price, ctx);
         
-        // Burn the payment (in a real scenario, this would be sent to a treasury)
-        let payment_balance = coin::into_balance(payment);
-        coin::from_balance(payment_balance, ctx);
+        // In a real scenario, you would transfer the payment to a treasury
+        // For now, we'll just burn it by transferring to the zero address
+        transfer::public_transfer(payment_coin, @0x0);
         
         // Return any change
-        if (coin::value(&change) > 0) {
-            transfer::public_transfer(change, sender);
-        };
+        if (coin::value(&payment) > 0) {
+            transfer::public_transfer(payment, sender);
+        }
         
         // Update or create XP balance
         update_xp_balance(sender, amount, ctx);
@@ -156,10 +160,9 @@ module wer2::xp_marketplace {
     }
 
     public fun balance_of(addr: address): u64 {
-        let xp_balance = object::get_dynamic_field<address, XPBalance>(addr);
-        if (option::is_some(&xp_balance)) {
-            let balance = option::extract(&mut xp_balance);
-            balance.balance
+        if (df::exists<address, XPBalance>(addr)) {
+            let xp_balance = df::get<address, XPBalance>(addr);
+            xp_balance.balance
         } else {
             0
         }
@@ -171,21 +174,22 @@ module wer2::xp_marketplace {
         ctx: &mut TxContext
     ) {
         let sender = tx_context::sender(ctx);
-        let xp_balance = object::get_dynamic_field<address, XPBalance>(sender);
+        assert!(df::exists<address, XPBalance>(sender), ERROR_INSUFFICIENT_BALANCE);
+        let xp_balance = df::get<address, XPBalance>(sender);
         
-        // Verify the user has an XP balance
-        assert!(option::is_some(&xp_balance), ERROR_INSUFFICIENT_BALANCE);
-        
-        // Get and verify the balance
-        let balance = option::extract(&mut xp_balance);
-        assert!(balance.balance >= amount, ERROR_INSUFFICIENT_BALANCE);
+        // Verify the balance is sufficient
+        assert!(xp_balance.balance >= amount, ERROR_INSUFFICIENT_BALANCE);
         
         // Update the balance
-        balance.balance = balance.balance - amount;
-        balance.last_updated = 0; // Update timestamp (in a real app, use a proper timestamp)
+        let XPBalance { id, balance: current_balance, last_updated: _ } = xp_balance;
+        let updated_balance = XPBalance {
+            id,
+            balance: current_balance - amount,
+            last_updated: 0, // Update timestamp (in a real app, use a proper timestamp)
+        };
         
         // Return the updated balance to the user
-        transfer::public_transfer(balance, sender);
+        transfer::public_transfer(updated_balance, sender);
         
         // Emit spent event
         let spent_event = XPSpent {
@@ -260,18 +264,22 @@ module wer2::xp_marketplace {
         assert!(amount > 0, ERROR_ZERO_AMOUNT);
         
         // Get and verify sender's balance
-        let xp_balance = object::get_dynamic_field<address, XPBalance>(sender_addr);
-        assert!(option::is_some(&xp_balance), ERROR_INSUFFICIENT_BALANCE);
+        assert!(df::exists<address, XPBalance>(sender_addr), ERROR_INSUFFICIENT_BALANCE);
+        let xp_balance = df::get<address, XPBalance>(sender_addr);
         
-        let balance = option::extract(&mut xp_balance);
-        assert!(balance.balance >= amount, ERROR_INSUFFICIENT_BALANCE);
+        // Verify the balance is sufficient
+        assert!(xp_balance.balance >= amount, ERROR_INSUFFICIENT_BALANCE);
         
         // Update sender's balance
-        balance.balance = balance.balance - amount;
-        balance.last_updated = 0; // In a real app, use a proper timestamp
+        let XPBalance { id, balance: current_balance, last_updated: _ } = xp_balance;
+        let updated_balance = XPBalance {
+            id,
+            balance: current_balance - amount,
+            last_updated: 0, // In a real app, use a proper timestamp
+        };
         
         // Return the updated balance to the sender
-        transfer::public_transfer(balance, sender_addr);
+        transfer::public_transfer(updated_balance, sender_addr);
         
         // Add XP to recipient
         update_xp_balance(recipient, amount, ctx);
