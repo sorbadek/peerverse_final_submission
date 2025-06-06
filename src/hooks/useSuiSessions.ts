@@ -1,13 +1,55 @@
 import React from 'react';
-import { useSuiClient, useSignAndExecuteTransaction, useCurrentAccount, useConnectWallet, useWallets, useSignPersonalMessage } from '@mysten/dapp-kit';
+import { 
+  useSuiClient, 
+  useSignAndExecuteTransaction, 
+  useCurrentAccount, 
+  useConnectWallet, 
+  useWallets, 
+  useSignPersonalMessage 
+} from '@mysten/dapp-kit';
 import { isEnokiWallet } from '@mysten/enoki';
 import { Transaction } from '@mysten/sui/transactions';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SuiClient } from '@mysten/sui/client';
 import { useZkLogin } from '../contexts/ZkLoginContext';
 
+// Constants
 const SESSION_PACKAGE_ID = "0x3126d451831200a73bd29fb45608867123d6ed0c6b1032c958a187b9385a163c";
 const SESSION_STORE_OBJECT_ID = "0xda8d0ff61cbd2867daf68520bedfe24d65bff05c8e11bf098ab207b7ac98f2bb";
+
+// Type definitions for transaction handling
+interface CreatedObject {
+  owner?: {
+    AddressOwner?: string;
+  };
+  reference?: {
+    objectId: string;
+  };
+}
+
+interface TransactionEffects {
+  created?: CreatedObject[];
+}
+
+interface TransactionResult {
+  effects: TransactionEffects | string;
+  digest: string;
+}
+
+interface SessionStoreFields {
+  sessions?: Array<{
+    fields: {
+      id: { id: string };
+      owner: string;
+      title: string;
+      description: string;
+      category: string;
+      duration: string;
+      room_name: string;
+      created_at: string;
+    };
+  }>;
+}
 
 export interface SessionData {
   title: string;
@@ -34,21 +76,15 @@ export interface SuiSession extends Omit<SessionFields, 'id'> {
   id: string;
 }
 
-export interface SessionData {
-  title: string;
-  description: string;
-  category: string;
-  duration: string;
-  roomName: string;
-  createdAt: string;
-}
-
 export function useSuiSessions() {
   const suiClient = useSuiClient();
   const { isAuthenticated, currentAddress } = useZkLogin();
   const currentAccount = useCurrentAccount();
   const { mutate: connect } = useConnectWallet();
   const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
+  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
+  const queryClient = useQueryClient();
+  const wallets = useWallets();
   
   // Get stored wallet connection info from localStorage
   const getStoredConnectionInfo = React.useCallback(() => {
@@ -68,8 +104,6 @@ export function useSuiSessions() {
   
   const storedConnectionInfo = React.useMemo(() => getStoredConnectionInfo(), [getStoredConnectionInfo]);
   
-  const wallets = useWallets();
-  
   // Initialize wallet connection for zkLogin if needed
   React.useEffect(() => {
     if (storedConnectionInfo?.walletName?.startsWith('enoki:') && !currentAccount) {
@@ -80,45 +114,17 @@ export function useSuiSessions() {
     }
   }, [storedConnectionInfo, currentAccount, connect, wallets]);
   
-  const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction({
-    onSuccess: (result) => {
-      console.log('Transaction successful:', result);
-    },
-    onError: (error) => {
-      console.error('Transaction failed:', error);
-    },
-  });
-  
-  // Helper function to execute transaction
-  const executeTransaction = async (txb: Transaction) => {
-    if (!currentAccount) {
-      throw new Error('No connected account found');
-    }
-    
-    // Set transaction options directly on the transaction object
-    const txbWithOptions = new Transaction();
-    Object.assign(txbWithOptions, txb);
-    
-    return signAndExecuteTransaction({
-      transaction: txbWithOptions,
-      chain: 'sui:devnet',
-      account: currentAccount,
-    });
-  };
-  
   // Get wallet address from current zkLogin, connected account, or stored connection
   const walletAddress = currentAddress || currentAccount?.address || storedConnectionInfo?.address;
-  const queryClient = useQueryClient();
 
-  // Fetch sessions from the blockchain
-  const { data: suiSessions = [], isLoading, error, refetch } = useQuery({
+  // Fetch all sessions
+  const { data: suiSessions = [], isLoading, error, refetch } = useQuery<SuiSession[]>({
     queryKey: ['suiSessions', walletAddress],
-    enabled: !!walletAddress, // Only fetch if we have a connected account
+    enabled: !!walletAddress,
     queryFn: async () => {
       if (!suiClient || !walletAddress) return [];
       
       try {
-        // First get the session store object
         const sessionStore = await suiClient.getObject({
           id: SESSION_STORE_OBJECT_ID,
           options: { showContent: true },
@@ -128,7 +134,6 @@ export function useSuiSessions() {
           throw new Error('Invalid session store object');
         }
 
-        // Get the sessions array from the session store
         // Type assertion for the session store fields
         type SessionStoreFields = {
           sessions?: Array<{
@@ -145,12 +150,12 @@ export function useSuiSessions() {
           }>;
         };
 
-        const storeFields = sessionStore.data.content.fields as SessionStoreFields;
+        const storeFields = sessionStore.data.content.fields as unknown as SessionStoreFields;
         
         if (!storeFields.sessions) return [];
 
         // Map the sessions to the expected format
-        return (storeFields.sessions || []).map(session => ({
+        return storeFields.sessions.map(session => ({
           id: session.fields.id.id,
           owner: session.fields.owner,
           title: session.fields.title,
@@ -209,111 +214,61 @@ export function useSuiSessions() {
           });
           createStoreTx.setGasBudget(10_000_000);
           
-          const createStoreResult = await signAndExecuteTransaction({
-            transaction: createStoreTx,
-            chain: 'sui:devnet',
-            account: currentAccount,
-          });
-          
-          // Log the full transaction result for debugging
-          console.log('Create store result:', createStoreResult);
-          
-          // Define interfaces for transaction result
           interface CreatedObject {
-            reference?: {
-              objectId: string;
-              version: string;
-              digest: string;
-            };
             owner?: {
               AddressOwner?: string;
+            };
+            reference?: {
+              objectId: string;
             };
           }
 
           interface TransactionEffects {
-            status?: {
-              status: string;
-            };
             created?: CreatedObject[];
-            createdObjects?: CreatedObject[];
-            events?: Array<{
-              type: string;
-              sender: string;
-              data: Record<string, unknown>;
-            }>;
           }
 
-          // Try to extract the created object ID from the transaction result
-          try {
-            console.log('Transaction result structure:', {
-              digest: createStoreResult.digest,
-              effectsType: typeof createStoreResult.effects,
-              effectsKeys: createStoreResult.effects ? Object.keys(createStoreResult.effects) : 'none',
-            });
+          interface TransactionResult {
+            effects: TransactionEffects | string;
+            digest: string;
+          }
 
-            // Try to get the effects object
-            const effects = createStoreResult.effects as unknown as TransactionEffects;
-            
-            // Check in created array first
-            if (effects?.created?.length) {
-              for (const obj of effects.created) {
-                if (obj.reference?.objectId) {
-                  sessionStoreId = obj.reference.objectId;
-                  console.log('Found session store in effects.created:', sessionStoreId);
-                  break;
-                }
+          const createStoreResult = await signAndExecuteTransaction({
+            transaction: createStoreTx,
+            chain: 'sui:devnet',
+            account: currentAccount,
+          }) as unknown as TransactionResult;
+          
+          console.log('Create store result:', createStoreResult);
+          
+          // Handle base64-encoded effects
+          let effects: TransactionEffects = {};
+          if (typeof createStoreResult.effects === 'string') {
+            try {
+              // First try to decode as base64
+              const decoded = atob(createStoreResult.effects);
+              // Then try to parse as JSON if it looks like JSON
+              if (decoded.trim().startsWith('{')) {
+                effects = JSON.parse(decoded) as TransactionEffects;
               }
+            } catch (e) {
+              console.warn('Could not parse effects as JSON, using empty object');
             }
+          } else {
+            effects = createStoreResult.effects as TransactionEffects;
+          }
             
-            // Check in createdObjects if still not found
-            if (!sessionStoreId && effects?.createdObjects?.length) {
-              for (const obj of effects.createdObjects) {
-                if (obj.reference?.objectId) {
-                  sessionStoreId = obj.reference.objectId;
-                  console.log('Found session store in effects.createdObjects:', sessionStoreId);
-                  break;
-                }
-              }
+          if (effects?.created) {
+            const createdObject = effects.created.find(
+              (obj: CreatedObject) => obj.owner?.AddressOwner === walletAddress
+            );
+            if (createdObject?.reference?.objectId) {
+              sessionStoreId = createdObject.reference.objectId;
+              console.log('Found new session store ID:', sessionStoreId);
             }
-            
-            // If we still don't have an ID, try to parse the effects string directly
-            if (!sessionStoreId && typeof createStoreResult.effects === 'string') {
-              try {
-                // Try to parse as JSON first (in case it's serialized)
-                const parsedEffects = JSON.parse(createStoreResult.effects);
-                if (parsedEffects?.created?.[0]?.reference?.objectId) {
-                  sessionStoreId = parsedEffects.created[0].reference.objectId;
-                  console.log('Found session store in parsed effects string:', sessionStoreId);
-                }
-              } catch (e) {
-                console.log('Effects is not a JSON string, trying binary parsing');
-                // If it's not JSON, it might be binary data
-                const hexString = Array.from(createStoreResult.effects)
-                  .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
-                  .join('');
-                
-                // Look for the object ID pattern (32 bytes after 0x0101)
-                const match = hexString.match(/0101([a-f0-9]{64})/i);
-                if (match) {
-                  sessionStoreId = '0x' + match[1];
-                  console.log('Found session store in binary data:', sessionStoreId);
-                }
-              }
-            }
-            
-            if (!sessionStoreId) {
-              console.error('Could not find session store ID in transaction result');
-              console.error('Transaction result:', JSON.stringify({
-                digest: createStoreResult.digest,
-                effects: createStoreResult.effects,
-                effectsType: typeof createStoreResult.effects
-              }, null, 2));
-              throw new Error('Could not determine created object ID from transaction result');
-            }
-            
-          } catch (error) {
-            console.error('Error processing transaction result:', error);
-            throw new Error('Failed to process transaction result: ' + (error as Error).message);
+          }
+          
+          if (!sessionStoreId) {
+            throw new Error('Failed to get the created session store ID');
           }
         }
 
@@ -337,35 +292,65 @@ export function useSuiSessions() {
         txb.transferObjects([session], txb.pure.address(walletAddress));
         txb.setGasBudget(10_000_000);
         
-        console.log('Submitting transaction with signer:', walletAddress);
-        const result = await executeTransaction(txb);
+        console.log('Submitting session creation transaction with signer:', walletAddress);
+        const result = await signAndExecuteTransaction({
+          transaction: txb,
+          chain: 'sui:devnet',
+          account: currentAccount,
+        });
         
         // Refetch sessions after successful transaction
         await queryClient.invalidateQueries({ queryKey: ['suiSessions'] });
         
-        // Return the session ID from the transaction result
-        if (result?.effects?.events) {
-          const createdEvent = result.effects.events.find(
-            (e: { type: string }) => e.type.includes('Created') || e.type.includes('SessionCreated')
+        // Extract the created session ID from the transaction result
+        let sessionId: string | undefined;
+        
+        // Handle base64-encoded effects for session creation
+        let resultEffects: TransactionEffects = {};
+        if (typeof result.effects === 'string') {
+          try {
+            // First try to decode as base64
+            const decoded = atob(result.effects);
+            // Then try to parse as JSON if it looks like JSON
+            if (decoded.trim().startsWith('{')) {
+              resultEffects = JSON.parse(decoded) as TransactionEffects;
+            }
+          } catch (e) {
+            console.warn('Could not parse effects as JSON, using empty object');
+          }
+        } else {
+          resultEffects = result.effects as TransactionEffects;
+        }
+          
+        if (resultEffects?.created) {
+          // Find the created session object
+          const createdSession = resultEffects.created.find(
+            (obj: CreatedObject) => obj.owner?.AddressOwner === walletAddress
           );
-          if (createdEvent) {
-            const sessionId = (createdEvent as any)?.id?.txDigest || result.digest;
-            return { sessionId };
+          
+          if (createdSession?.reference?.objectId) {
+            sessionId = createdSession.reference.objectId;
           }
         }
         
-        // Fallback to using the transaction digest as the session ID
-        return { sessionId: result.digest };
+        // Fallback to using the transaction digest if we couldn't find the object ID
+        if (!sessionId) {
+          console.warn('Could not find created session ID in transaction result, using transaction digest instead');
+          sessionId = result.digest;
+        }
+        
+        console.log('Created session with ID:', sessionId);
+        return { sessionId };
+        
       } catch (error) {
         console.error('Error creating session:', error);
-        throw error;
+        throw new Error('Failed to create session: ' + (error as Error).message);
       }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['suiSessions'] });
     },
   });
-  
 
   return {
     sessions: suiSessions,
@@ -374,7 +359,7 @@ export function useSuiSessions() {
     createSession: createSession.mutateAsync,
     refetch,
     isConnected: !!currentAccount || !!currentAddress,
-    walletAddress: walletAddress,
+    walletAddress: walletAddress || '',
     wallet: currentAccount,
     signMessage: signPersonalMessage,
   };
