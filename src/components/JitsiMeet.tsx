@@ -82,9 +82,24 @@ const JitsiMeet: React.FC<JitsiMeetProps> = ({ roomId, onClose, displayName = 'U
   const { roomId: urlRoomId } = useParams<{ roomId: string }>();
   const effectiveRoomId = roomId || urlRoomId;
 
+  // Helper function to validate Sui Object ID format
+  const isValidSuiObjectId = (id: string): boolean => {
+    return /^(0x)?[0-9a-f]{1,64}$/i.test(id);
+  };
+
   const fetchRoomInfo = useCallback(async () => {
     if (!effectiveRoomId) {
-      console.error('No roomId provided');
+      const errMsg = 'No room ID provided';
+      console.error(errMsg);
+      setError(errMsg);
+      return null;
+    }
+
+    // Validate the room ID format
+    if (!isValidSuiObjectId(effectiveRoomId)) {
+      const errMsg = `Invalid room ID format: ${effectiveRoomId}. Room ID must be a valid Sui Object ID.`;
+      console.error(errMsg);
+      setError(errMsg);
       return null;
     }
     
@@ -103,35 +118,58 @@ const JitsiMeet: React.FC<JitsiMeetProps> = ({ roomId, onClose, displayName = 'U
       if (!roomObj.data?.content) {
         const errMsg = 'Room content not found in blockchain response';
         console.error(errMsg, roomObj);
-        throw new Error(errMsg);
+        setError('Room not found or inaccessible');
+        return null;
       }
 
-      const content = roomObj.data.content as any;
+      // Define the expected shape of the content object
+      interface SuiMoveObjectContent {
+        dataType: string;
+        fields: RoomInfo;
+        hasPublicTransfer?: boolean;
+        type: string;
+      }
+
+      const content = roomObj.data.content as SuiMoveObjectContent;
       console.log('Room content:', content);
 
       if (content.dataType !== 'moveObject') {
         const errMsg = `Expected moveObject but got ${content.dataType}`;
         console.error(errMsg);
-        throw new Error(errMsg);
+        setError('Invalid room data format');
+        return null;
       }
 
       const roomData = content.fields as RoomInfo;
       console.log('Parsed room data:', roomData);
 
-      if (!roomData.roomName) {
-        console.warn('Room data is missing roomName, using ID as fallback');
-        roomData.roomName = effectiveRoomId;
+      // Ensure required fields exist
+      if (!roomData.roomName || !roomData.owner) {
+        const errMsg = 'Room data is missing required fields';
+        console.error(errMsg, roomData);
+        setError('Invalid room data: missing required fields');
+        return null;
       }
 
-      const roomInfo = {
-        ...roomData,
-        isHost: roomData.owner === (user?.address || '')
+      // Create room info object with proper defaults
+      const roomInfo: RoomInfo = {
+        id: effectiveRoomId,
+        owner: roomData.owner,
+        title: roomData.title || 'Untitled Session',
+        description: roomData.description || '',
+        category: roomData.category || 'General',
+        duration: roomData.duration || '30 min',
+        roomName: roomData.roomName || `room-${effectiveRoomId.slice(0, 8)}`,
+        createdAt: roomData.createdAt || new Date().toISOString(),
+        isHost: roomData.owner === (user?.address || ''),
       };
 
       console.log('Final room info:', roomInfo);
       return roomInfo;
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to load room info';
+      const errorMsg = err instanceof Error ? 
+        `Failed to load room: ${err.message}` : 
+        'Failed to load room information';
       console.error('Error fetching room info:', err);
       setError(errorMsg);
       return null;
