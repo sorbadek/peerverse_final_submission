@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useCallback, useState, useLayoutEffect } from 'react';
-import { useAuth } from '../hooks/useAuth';
 import { useZkLogin } from '../contexts/ZkLoginContext';
+import { useSuiSessions } from '@/hooks/useSuiSessions';
 import { toast } from './ui/use-toast';
 
 // Jitsi Meet API types
@@ -88,12 +88,20 @@ declare global {
 }
 
 const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: JitsiMeetProps): JSX.Element => {
-  const { user, isAuthenticated } = useAuth();
-  const { currentAddress } = useZkLogin();
+  const { wallet, isConnected, walletAddress, isLoading: isSessionLoading } = useSuiSessions();
+  const { currentAddress, isAuthenticated, isLoading: isZkLoginLoading } = useZkLogin();
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<JitsiMeetAPI | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(true);
+
+  // Check if we're still initializing the wallet connection
+  useEffect(() => {
+    if (!isSessionLoading && !isZkLoginLoading) {
+      setIsInitializing(false);
+    }
+  }, [isSessionLoading, isZkLoginLoading]);
 
   // Check for mobile on mount and window resize
   useLayoutEffect(() => {
@@ -113,17 +121,15 @@ const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: 
 
   // Get user display name
   const getDisplayName = useCallback(() => {
-    if (displayName) return displayName;
+    if (displayName && displayName !== 'User') return displayName;
     
     if (currentAddress) {
       return `User-${currentAddress.slice(0, 6)}`;
-    } else if (user?.name) {
-      return user.name;
-    } else if (user?.email) {
-      return user.email.split('@')[0];
+    } else if (walletAddress) {
+      return `User-${walletAddress.slice(0, 6)}`;
     }
     return 'Anonymous';
-  }, [displayName, currentAddress, user]);
+  }, [displayName, currentAddress, walletAddress]);
 
   // Set up event handlers
   const setupEventHandlers = useCallback((jitsi: JitsiMeetAPI) => {
@@ -355,7 +361,7 @@ const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: 
         containerRef.current = null;
       }
     };
-  }, [scriptLoaded, roomName, isHost, user?.email, getDisplayName, onClose, setupEventHandlers]);
+  }, [scriptLoaded, roomName, isHost, currentAddress, walletAddress, getDisplayName, onClose, setupEventHandlers]);
 
   // Load Jitsi script
   useEffect(() => {
