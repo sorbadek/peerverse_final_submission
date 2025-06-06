@@ -320,7 +320,7 @@ export function useSuiSessions() {
         // Now create the session using the found or created session store
         const txb = new Transaction();
         
-        txb.moveCall({
+        const [session] = txb.moveCall({
           target: `${SESSION_PACKAGE_ID}::session_manager::create_session`,
           arguments: [
             txb.object(sessionStoreId),
@@ -334,6 +334,7 @@ export function useSuiSessions() {
           ],
         });
         
+        txb.transferObjects([session], txb.pure.address(walletAddress));
         txb.setGasBudget(10_000_000);
         
         console.log('Submitting transaction with signer:', walletAddress);
@@ -342,7 +343,19 @@ export function useSuiSessions() {
         // Refetch sessions after successful transaction
         await queryClient.invalidateQueries({ queryKey: ['suiSessions'] });
         
-        return result;
+        // Return the session ID from the transaction result
+        if (result?.effects?.events) {
+          const createdEvent = result.effects.events.find(
+            (e: { type: string }) => e.type.includes('Created') || e.type.includes('SessionCreated')
+          );
+          if (createdEvent) {
+            const sessionId = (createdEvent as any)?.id?.txDigest || result.digest;
+            return { sessionId };
+          }
+        }
+        
+        // Fallback to using the transaction digest as the session ID
+        return { sessionId: result.digest };
       } catch (error) {
         console.error('Error creating session:', error);
         throw error;

@@ -15,10 +15,9 @@ const TutorHubInner = () => {
   if (currentSession) {
     return (
       <JitsiMeet
-        roomName={currentSession.roomName}
+        roomId={currentSession.id}
         displayName="User" // In a real app, this would come from user context
         onClose={endSession}
-        isHost={currentSession.isHost}
       />
     );
   }

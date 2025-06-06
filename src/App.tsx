@@ -2,7 +2,26 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useParams } from "react-router-dom";
+import JitsiMeet from "./components/JitsiMeet";
+
+// Component to handle the session route with proper hooks usage
+const SessionRoute = () => {
+  const { roomId } = useParams<{ roomId: string }>();
+  
+  if (!roomId) {
+    return <div>No room ID provided</div>;
+  }
+
+  return (
+    <div className="w-full h-screen">
+      <JitsiMeet 
+        onClose={() => window.history.back()} 
+        roomId={roomId} 
+      />
+    </div>
+  );
+};
 import { EnokiFlowProvider } from '@mysten/enoki/react';
 import { SuiClientProvider, WalletProvider } from '@mysten/dapp-kit';
 import { getFullnodeUrl, SuiClient } from '@mysten/sui/client';
@@ -23,7 +42,6 @@ import Settings from "./pages/Settings";
 import PublicProfile from "./pages/PublicProfile";
 import AuthCallback from "./pages/AuthCallback";
 import NotFound from "./pages/NotFound";
-import JitsiMeet from "./components/JitsiMeet";
 
 const queryClient = new QueryClient();
 
@@ -101,9 +119,7 @@ const App = () => (
                       } />
                       <Route path="/session/:roomId" element={
                         <ProtectedRoute>
-                          <div className="w-full h-screen">
-                            <JitsiMeet onClose={() => window.history.back()} roomId={window.location.pathname.split('/').pop() || ''} />
-                          </div>
+                          <SessionRoute />
                         </ProtectedRoute>
                       } />
                       <Route path="/public-profile" element={

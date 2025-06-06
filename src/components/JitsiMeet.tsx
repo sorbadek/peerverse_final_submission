@@ -87,15 +87,11 @@ const JitsiMeet: React.FC<JitsiMeetProps> = ({ roomId, onClose, displayName = 'U
     return /^(0x)?[0-9a-f]{1,64}$/i.test(id);
   };
 
-  const fetchRoomInfo = useCallback(async () => {
-    if (!effectiveRoomId) {
-      const errMsg = 'No room ID provided';
-      console.error(errMsg);
-      setError(errMsg);
-      return null;
-    }
-
-    // Validate the room ID format
+  const fetchRoomInfo = useCallback(async (): Promise<RoomInfo | null> => {
+    if (!effectiveRoomId) return null;
+    
+    setIsLoading(true);
+    setError(null);
     if (!isValidSuiObjectId(effectiveRoomId)) {
       const errMsg = `Invalid room ID format: ${effectiveRoomId}. Room ID must be a valid Sui Object ID.`;
       console.error(errMsg);
@@ -161,7 +157,7 @@ const JitsiMeet: React.FC<JitsiMeetProps> = ({ roomId, onClose, displayName = 'U
         duration: roomData.duration || '30 min',
         roomName: roomData.roomName || `room-${effectiveRoomId.slice(0, 8)}`,
         createdAt: roomData.createdAt || new Date().toISOString(),
-        isHost: roomData.owner === (user?.address || ''),
+        isHost: roomData.owner === (user?.zkAddress || ''),
       };
 
       console.log('Final room info:', roomInfo);
@@ -176,7 +172,7 @@ const JitsiMeet: React.FC<JitsiMeetProps> = ({ roomId, onClose, displayName = 'U
     } finally {
       setIsLoading(false);
     }
-  }, [effectiveRoomId, suiClient, user?.address]);
+  }, [effectiveRoomId, suiClient, user?.zkAddress]);
 
   // Load room info when effectiveRoomId changes
   useEffect(() => {
@@ -315,9 +311,7 @@ const JitsiMeet: React.FC<JitsiMeetProps> = ({ roomId, onClose, displayName = 'U
             'tileview'
           ]
         },
-        onload: () => {
-          console.log('Jitsi Meet API loaded');
-        }
+        // Jitsi Meet API will be ready after initialization
       };
 
       console.log('Creating Jitsi instance with options:', {
