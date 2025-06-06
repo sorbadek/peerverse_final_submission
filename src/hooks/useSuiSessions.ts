@@ -206,7 +206,7 @@ export function useSuiSessions() {
           const createStoreTx = new Transaction();
           createStoreTx.moveCall({
             target: `${SESSION_PACKAGE_ID}::session_manager::create_session_store`,
-            arguments: [createStoreTx.pure.address(walletAddress)],
+            arguments: [],
           });
           createStoreTx.setGasBudget(10_000_000);
           
@@ -219,39 +219,102 @@ export function useSuiSessions() {
           // Log the full transaction result for debugging
           console.log('Create store result:', createStoreResult);
           
+          // Define interfaces for transaction result
+          interface CreatedObject {
+            reference?: {
+              objectId: string;
+              version: string;
+              digest: string;
+            };
+            owner?: {
+              AddressOwner?: string;
+            };
+          }
+
+          interface TransactionEffects {
+            status?: {
+              status: string;
+            };
+            created?: CreatedObject[];
+            createdObjects?: CreatedObject[];
+            events?: Array<{
+              type: string;
+              sender: string;
+              data: Record<string, unknown>;
+            }>;
+          }
+
           // Try to extract the created object ID from the transaction result
-          if (typeof createStoreResult.effects === 'string') {
-            // If effects is a string, it might be base64 encoded
-            try {
-              const effects = JSON.parse(atob(createStoreResult.effects));
-              if (effects?.created?.[0]?.reference?.objectId) {
-                sessionStoreId = effects.created[0].reference.objectId;
-                console.log('Created new session store (from base64):', sessionStoreId);
-              }
-            } catch (e) {
-              console.error('Error parsing effects string:', e);
-            }
-          } else if (createStoreResult.effects?.created?.[0]?.reference?.objectId) {
-            // If effects is an object with created array
-            sessionStoreId = createStoreResult.effects.created[0].reference.objectId;
-            console.log('Created new session store:', sessionStoreId);
-          } else if (createStoreResult.effects?.createdObjects?.[0]?.reference?.objectId) {
-            // Alternative path if created objects are in createdObjects
-            sessionStoreId = createStoreResult.effects.createdObjects[0].reference.objectId;
-            console.log('Created new session store (from createdObjects):', sessionStoreId);
-          } else if (createStoreResult.objectId) {
-            // If the result itself has an objectId
-            sessionStoreId = createStoreResult.objectId;
-            console.log('Using result objectId as session store:', sessionStoreId);
-          } else {
-            console.error('Failed to get new session store ID from transaction result');
-            console.error('Transaction result structure:', {
-              effects: createStoreResult.effects,
-              objectId: createStoreResult.objectId,
+          try {
+            console.log('Transaction result structure:', {
               digest: createStoreResult.digest,
-              rawEffects: createStoreResult.rawEffects ? 'present' : 'missing'
+              effectsType: typeof createStoreResult.effects,
+              effectsKeys: createStoreResult.effects ? Object.keys(createStoreResult.effects) : 'none',
             });
-            throw new Error('Failed to create session store: Could not determine created object ID');
+
+            // Try to get the effects object
+            const effects = createStoreResult.effects as unknown as TransactionEffects;
+            
+            // Check in created array first
+            if (effects?.created?.length) {
+              for (const obj of effects.created) {
+                if (obj.reference?.objectId) {
+                  sessionStoreId = obj.reference.objectId;
+                  console.log('Found session store in effects.created:', sessionStoreId);
+                  break;
+                }
+              }
+            }
+            
+            // Check in createdObjects if still not found
+            if (!sessionStoreId && effects?.createdObjects?.length) {
+              for (const obj of effects.createdObjects) {
+                if (obj.reference?.objectId) {
+                  sessionStoreId = obj.reference.objectId;
+                  console.log('Found session store in effects.createdObjects:', sessionStoreId);
+                  break;
+                }
+              }
+            }
+            
+            // If we still don't have an ID, try to parse the effects string directly
+            if (!sessionStoreId && typeof createStoreResult.effects === 'string') {
+              try {
+                // Try to parse as JSON first (in case it's serialized)
+                const parsedEffects = JSON.parse(createStoreResult.effects);
+                if (parsedEffects?.created?.[0]?.reference?.objectId) {
+                  sessionStoreId = parsedEffects.created[0].reference.objectId;
+                  console.log('Found session store in parsed effects string:', sessionStoreId);
+                }
+              } catch (e) {
+                console.log('Effects is not a JSON string, trying binary parsing');
+                // If it's not JSON, it might be binary data
+                const hexString = Array.from(createStoreResult.effects)
+                  .map(c => c.charCodeAt(0).toString(16).padStart(2, '0'))
+                  .join('');
+                
+                // Look for the object ID pattern (32 bytes after 0x0101)
+                const match = hexString.match(/0101([a-f0-9]{64})/i);
+                if (match) {
+                  sessionStoreId = '0x' + match[1];
+                  console.log('Found session store in binary data:', sessionStoreId);
+                }
+              }
+            }
+            
+            if (!sessionStoreId) {
+              console.error('Could not find session store ID in transaction result');
+              console.error('Transaction result:', JSON.stringify({
+                digest: createStoreResult.digest,
+                effects: createStoreResult.effects,
+                effectsType: typeof createStoreResult.effects
+              }, null, 2));
+              throw new Error('Could not determine created object ID from transaction result');
+            }
+            
+          } catch (error) {
+            console.error('Error processing transaction result:', error);
+            throw new Error('Failed to process transaction result: ' + (error as Error).message);
           }
         }
 

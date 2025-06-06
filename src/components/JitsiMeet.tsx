@@ -1,7 +1,10 @@
-import React, { useEffect, useRef, useCallback, useState, useLayoutEffect } from 'react';
+import React, { useEffect, useRef, useCallback, useState, useLayoutEffect, useContext } from 'react';
 import { useZkLogin } from '../contexts/ZkLoginContext';
 import { useSuiSessions } from '@/hooks/useSuiSessions';
+import { AuthContext } from '@/contexts/AuthContext.types';
 import { toast } from './ui/use-toast';
+import { useSuiClient } from '@mysten/dapp-kit';
+import { toB64 } from '@mysten/sui.js/utils';
 
 // Jitsi Meet API types
 type JitsiCommand = 'displayName' | 'password' | 'toggleLobby' | 'overwriteConfig' | 'toggleAudio' | 'toggleVideo' | string;
@@ -49,6 +52,7 @@ interface JitsiMeetAPIOptions {
   width?: string | number;
   height?: string | number;
   parentNode: HTMLElement | null;
+  jwt?: string;
   userInfo?: {
     displayName?: string;
     email?: string;
@@ -88,20 +92,258 @@ declare global {
 }
 
 const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: JitsiMeetProps): JSX.Element => {
-  const { wallet, isConnected, walletAddress, isLoading: isSessionLoading } = useSuiSessions();
-  const { currentAddress, isAuthenticated, isLoading: isZkLoginLoading } = useZkLogin();
+  const authContext = useContext(AuthContext);
+  const user = authContext?.user;
+  const isAuth = authContext?.isAuthenticated || false;
+  const { currentAddress, isAuthenticated: isZkAuthenticated } = useZkLogin();
+  const { wallet, isConnected, walletAddress, isLoading: isSessionLoading, signMessage } = useSuiSessions();
+  const suiClient = useSuiClient();
+  const [authToken, setAuthToken] = useState<string>('');
+  
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const apiRef = useRef<JitsiMeetAPI | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [isInitializing, setIsInitializing] = useState(true);
+  interface RoomInfo {
+    content?: {
+      dataType: string;
+      type: string;
+      hasPublicTransfer: boolean;
+      fields: Record<string, unknown>;
+    };
+    owner?: {
+      AddressOwner?: string;
+      [key: string]: unknown;
+    };
+    [key: string]: unknown;
+  }
 
-  // Check if we're still initializing the wallet connection
+  const [roomInfo, setRoomInfo] = useState<RoomInfo | null>(null);
+  const [isLoadingRoom, setIsLoadingRoom] = useState(true);
+  const [roomError, setRoomError] = useState<string | null>(null);
+
+  // Fetch room info from blockchain or local storage
+  const fetchRoomInfo = useCallback(async () => {
+    if (!roomName) return null;
+
+    try {
+      setIsLoadingRoom(true);
+      setRoomError(null);
+
+      // Check if this is a local session (starts with 'tutorHub_session_')
+      const isLocalSession = roomName.startsWith('tutorHub_session_');
+      
+      // For local sessions, use the local storage wallet
+      if (isLocalSession) {
+        // Try to get wallet from local storage first, then from props
+        const storedWallet = localStorage.getItem('wallet-address');
+        const effectiveWallet = storedWallet || walletAddress || currentAddress;
+        
+        if (!effectiveWallet) {
+          throw new Error('Please connect your wallet to join the session');
+        }
+
+        // Return a minimal room info object for local sessions
+        return {
+          id: roomName,
+          owner: effectiveWallet,
+          title: 'Peer Session',
+          description: 'Direct peer-to-peer tutoring session',
+          category: 'Education',
+          duration: '60 min',
+          room_name: roomName,
+          created_at: new Date().toISOString(),
+          isHost: true
+        } as unknown as RoomInfo;
+      }
+
+      // For non-local sessions, check if it's a valid Sui object ID
+      const isSuiObjectId = /^0x[0-9a-fA-F]{1,64}$/.test(roomName);
+      if (!isSuiObjectId) {
+        throw new Error('Invalid room identifier');
+      }
+
+      // If it's a valid Sui object ID, try to fetch from blockchain
+      try {
+        const roomObj = await suiClient.getObject({
+          id: roomName,
+          options: { showContent: true },
+        });
+
+        if (!roomObj.data) {
+          throw new Error('Room not found on blockchain');
+        }
+
+        return roomObj.data.content as RoomInfo;
+      } catch (blockchainError) {
+        console.error('Blockchain fetch error:', blockchainError);
+        throw new Error('Failed to fetch room from blockchain');
+      }
+    } catch (error) {
+      console.error('Error fetching room info:', error);
+      
+      // For local sessions, try to continue with minimal info
+      if (roomName.startsWith('tutorHub_session_')) {
+        const fallbackWallet = localStorage.getItem('wallet-address') || 
+                             walletAddress || 
+                             currentAddress || 
+                             'unknown';
+        
+        return {
+          id: roomName,
+          owner: fallbackWallet,
+          title: 'Peer Session',
+          description: 'Direct peer-to-peer tutoring session',
+          category: 'Education',
+          duration: '60 min',
+          room_name: roomName,
+          created_at: new Date().toISOString(),
+          isHost: true,
+          _fallback: true // Indicate this is a fallback room info
+        } as unknown as RoomInfo;
+      }
+      
+      // For blockchain rooms, show appropriate error
+      const errorMessage = error instanceof Error ? error.message : 'Failed to load room info';
+      setRoomError(errorMessage);
+      
+      // If we have a wallet address, we can still create a minimal room
+      const fallbackWallet = localStorage.getItem('wallet-address') || 
+                           walletAddress || 
+                           currentAddress;
+      
+      if (fallbackWallet) {
+        return {
+          id: roomName,
+          owner: fallbackWallet,
+          title: 'Tutoring Session',
+          description: 'Direct tutoring session',
+          category: 'Education',
+          duration: '60 min',
+          room_name: roomName,
+          created_at: new Date().toISOString(),
+          isHost: true,
+          _fallback: true
+        } as unknown as RoomInfo;
+      }
+      
+      return null;
+    } finally {
+      setIsLoadingRoom(false);
+    }
+  }, [roomName, suiClient, walletAddress, currentAddress]);
+
+  // Fetch room information from the blockchain or local storage
   useEffect(() => {
-    if (!isSessionLoading && !isZkLoginLoading) {
+    fetchRoomInfo().then((roomInfo) => {
+      if (roomInfo) {
+        setRoomInfo(roomInfo);
+      }
+    });
+  }, [fetchRoomInfo]);
+
+  // Check authentication and initialization
+  useEffect(() => {
+    if (!isSessionLoading) {
+      const isUserAuthenticated = isAuth || isZkAuthenticated || isConnected;
+      
+      if (!isUserAuthenticated) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Please connect your wallet to join the meeting',
+          variant: 'destructive',
+        });
+        onClose();
+        return;
+      }
+      
       setIsInitializing(false);
     }
-  }, [isSessionLoading, isZkLoginLoading]);
+  }, [isAuth, isZkAuthenticated, isConnected, isSessionLoading, onClose]);
+
+  // Generate authentication token using zkLogin or wallet signature
+  useEffect(() => {
+    const generateAuthToken = async () => {
+      try {
+        let tokenData;
+        const timestamp = Date.now();
+        const uniqueId = `${timestamp}-${Math.random().toString(36).substr(2, 9)}`;
+        
+        if (isZkAuthenticated && currentAddress) {
+          // For zkLogin users
+          tokenData = {
+            id: uniqueId,
+            address: currentAddress,
+            displayName: user?.name || `User-${currentAddress.slice(0, 6)}`,
+            room: roomName,
+            timestamp,
+            authType: 'zkLogin'
+          };
+        } else if (wallet && walletAddress) {
+          // For regular wallet users
+          const message = `Jitsi Authentication - Room: ${roomName} - ${timestamp}`;
+          const signature = await signMessage({
+            message: new TextEncoder().encode(message)
+          });
+          
+          tokenData = {
+            id: uniqueId,
+            address: walletAddress,
+            displayName: user?.name || `User-${walletAddress.slice(0, 6)}`,
+            room: roomName,
+            timestamp,
+            signature: toB64(signature.signature),
+            authType: 'wallet'
+          };
+        } else {
+          return; // No valid authentication method
+        }
+        
+        // Store the token in base64 format
+        setAuthToken(btoa(JSON.stringify(tokenData)));
+      } catch (error) {
+        console.error('Error generating auth token:', error);
+        toast({
+          title: 'Authentication Error',
+          description: 'Failed to sign authentication message',
+          variant: 'destructive',
+        });
+      }
+    };
+
+    if (isAuth || isZkAuthenticated || isConnected) {
+      generateAuthToken();
+    }
+  }, [wallet, walletAddress, currentAddress, isAuth, isZkAuthenticated, isConnected, roomName, user?.name, signMessage]);
+
+  // Initialize Jitsi when authenticated and room info is loaded
+  useEffect(() => {
+    if (!isSessionLoading) {
+      const isUserAuthenticated = (isAuth || isZkAuthenticated || isConnected) && !!authToken;
+      const isReady = !isLoadingRoom && !roomError && isUserAuthenticated;
+      
+      if (isReady) {
+        setIsInitializing(false);
+      } else if (!isUserAuthenticated) {
+        toast({
+          title: 'Authentication Required',
+          description: 'Please connect your wallet to join the meeting',
+          variant: 'destructive',
+        });
+        onClose();
+      }
+    }
+  }, [
+    isSessionLoading,
+    isAuth,
+    isZkAuthenticated,
+    isConnected,
+    isLoadingRoom,
+    roomError,
+    onClose,
+    authToken
+  ]);
 
   // Check for mobile on mount and window resize
   useLayoutEffect(() => {
@@ -121,15 +363,10 @@ const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: 
 
   // Get user display name
   const getDisplayName = useCallback(() => {
-    if (displayName && displayName !== 'User') return displayName;
-    
-    if (currentAddress) {
-      return `User-${currentAddress.slice(0, 6)}`;
-    } else if (walletAddress) {
-      return `User-${walletAddress.slice(0, 6)}`;
-    }
-    return 'Anonymous';
-  }, [displayName, currentAddress, walletAddress]);
+    return user?.name || 
+      (walletAddress ? `User-${walletAddress.slice(0, 6)}` : 
+      (currentAddress ? `User-${currentAddress.slice(0, 6)}` : 'Anonymous'));
+  }, [user?.name, walletAddress, currentAddress]);
 
   // Set up event handlers
   const setupEventHandlers = useCallback((jitsi: JitsiMeetAPI) => {
@@ -225,11 +462,17 @@ const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: 
         containerRef.current.innerHTML = '';
         containerRef.current.appendChild(jitsiContainer);
 
+        const userDisplayName = getDisplayName();
         const options: JitsiMeetAPIOptions = {
           roomName: roomName,
           parentNode: jitsiContainer,
           width: '100%',
           height: '100%',
+          jwt: authToken,
+          userInfo: {
+            displayName: userDisplayName,
+            email: user?.email || `${userDisplayName}@tutorhub.xyz`
+          },
           configOverwrite: {
             startWithAudioMuted: !isHost,
             startWithVideoMuted: !isHost,

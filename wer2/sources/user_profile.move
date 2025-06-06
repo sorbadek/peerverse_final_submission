@@ -1,4 +1,4 @@
-#[allow(duplicate_alias), (unused_alias)]
+#[allow(duplicate_alias),(unused_alias)]
 module wer2::user_profile {
     use sui::object::{Self, UID};
     use sui::tx_context::{Self, TxContext};

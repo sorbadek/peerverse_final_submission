@@ -217,9 +217,9 @@ const TutorHubContent = () => {
           </div>
         ) : filteredSessions.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredSessions.map((session) => (
+            {filteredSessions.map((session, index) => (
               <OngoingSessionCard
-                key={session.id}
+                key={`${session.id}-${index}-${Date.now()}`}
                 session={session}
                 onComplete={() => handleSessionCompletion(session)}
               />
