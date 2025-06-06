@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSuiClient, useSignAndExecuteTransaction, useCurrentAccount, useConnectWallet, useWallets } from '@mysten/dapp-kit';
+import { useSuiClient, useSignAndExecuteTransaction, useCurrentAccount, useConnectWallet, useWallets, useSignMessage } from '@mysten/dapp-kit';
 import { isEnokiWallet } from '@mysten/enoki';
 import { Transaction } from '@mysten/sui/transactions';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -50,6 +50,7 @@ export function useSuiSessions() {
   const { isAuthenticated, currentAddress } = useZkLogin();
   const currentAccount = useCurrentAccount();
   const { mutate: connect } = useConnectWallet();
+  const { mutateAsync: signMessage } = useSignMessage();
   
   // Get stored wallet connection info from localStorage
   const getStoredConnectionInfo = React.useCallback(() => {
@@ -364,5 +365,6 @@ export function useSuiSessions() {
     isConnected: !!currentAccount || !!currentAddress,
     walletAddress: walletAddress,
     wallet: currentAccount,
+    signMessage,
   };
 }

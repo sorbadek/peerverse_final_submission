@@ -539,10 +539,6 @@ const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: 
             DISABLE_VIDEO_QUALITY_LABEL: true,
             MOBILE_APP_PROMO: false,
             SETTINGS_SECTIONS: ['devices', 'language', 'moderator', 'profile', 'calendar']
-          },
-          userInfo: {
-            displayName,
-            email: ''
           }
         };
 
