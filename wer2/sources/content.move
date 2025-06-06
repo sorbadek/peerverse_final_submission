@@ -3,9 +3,10 @@ module wer2::content {
     // Import standard library and Sui framework modules
     use sui::tx_context::{Self, TxContext};
     use sui::object::{Self, UID, ID};
-    use std::string::{Self, String};
+    use std::string::String;
     use sui::transfer;
     use sui::event;
+    use sui::clock::{Self, Clock};
 
     
     // Constants for content types
@@ -47,8 +48,8 @@ module wer2::content {
         created_at: u64,
     }
 
-    public fun create_content(
-        _creator: &signer,
+    public entry fun create_content(
+        creator: &signer,
         title: String,
         description: String,
         content_type: u8,
@@ -57,10 +58,11 @@ module wer2::content {
         price_xp: u64,
         visibility: u8,
         tags: vector<String>,
+        clock: &Clock,
         ctx: &mut TxContext
     ) {
         let creator_addr = tx_context::sender(ctx);
-        let now = 0; // Will be replaced with actual timestamp when clock is available
+        let now = clock::timestamp_ms(clock) / 1000; // Convert to seconds
         
         // Validate inputs
         assert!(std::string::length(&title) > 0, E_INVALID_TITLE);
@@ -100,13 +102,23 @@ module wer2::content {
     }
 
 
-    public fun access_content(
-        _sender: &signer,
+    public entry fun access_content(
+        sender: &signer,
         content: &mut Content,
+        clock: &Clock,
+        payment: Option<u64>,
         ctx: &mut TxContext
     ) {
-        let now = 0; // Temporary placeholder - will be replaced with actual timestamp
+        let now = clock::timestamp_ms(clock) / 1000; // Convert to seconds
         let sender_addr = tx_context::sender(ctx);
+        
+        // Process payment if required
+        if (option::is_some(&payment)) {
+            let amount = option::extract(&mut payment);
+            // In a real implementation, you would verify the payment here
+            // For now, we just ensure the payment meets the content's price
+            assert!(amount >= content.price_xp, E_INSUFFICIENT_XP);
+        }
         
         if (content.visibility == VISIBILITY_PRIVATE && content.creator != sender_addr) {
             // Only the creator can access private content
@@ -123,17 +135,18 @@ module wer2::content {
     }
 
 
-    public fun update_content(
-        _sender: &signer,
+    public entry fun update_content(
+        sender: &signer,
         content: &mut Content,
         new_title: String,
         new_description: String,
         new_visibility: u8,
         new_tags: vector<String>,
+        clock: &Clock,
         ctx: &mut TxContext
     ) {
         let sender_addr = tx_context::sender(ctx);
-        let now = 0; // Temporary placeholder
+        let now = clock::timestamp_ms(clock) / 1000; // Convert to seconds
         
         // Only the creator can update content
         assert!(content.creator == sender_addr, E_UNAUTHORIZED);

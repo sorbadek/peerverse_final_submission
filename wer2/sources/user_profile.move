@@ -5,11 +5,9 @@ module wer2::user_profile {
     use std::string::String;
     use sui::transfer;
     use sui::event;
-    use sui::clock;
-    use std::string::{Self};
-    use std::option::Option;
-    use std::vector;
-    use sui::dynamic_field;
+    use sui::clock::{Self, Clock};
+    use sui::sui::SUI;
+    use sui::coin::Coin;
 
     // ===== Constants =====
     const GRACE_PERIOD_DAYS: u64 = 7;
@@ -63,18 +61,19 @@ module wer2::user_profile {
         username: String,
         bio: String,
         avatar_url: String,
+        clock: &Clock,
         ctx: &mut TxContext
     ) {
-        let now = clock::timestamp_ms(ctx) / 1000;
+        let now = clock::timestamp_ms(clock) / 1000;
         let grace_period_end = now + (GRACE_PERIOD_DAYS * SECONDS_PER_DAY);
         let sender = tx_context::sender(ctx);
         
         let profile = UserProfile {
             id: object::new(ctx),
             zk_address,
-            username,
-            bio,
-            avatar_url,
+            username: copy username,
+            bio: copy bio,
+            avatar_url: copy avatar_url,
             is_tutor: false,
             xp_balance: INITIAL_XP,
             total_xp_earned: INITIAL_XP,
@@ -95,6 +94,8 @@ module wer2::user_profile {
         event::emit(ProfileCreated {
             user_address: sender,
             grace_period_end,
+            username,
+            is_tutor: false
         });
     }
 
@@ -144,14 +145,18 @@ module wer2::user_profile {
 
     public entry fun award_performance_xp(
         profile: &mut UserProfile,
+        clock: &Clock,
+        payment: Coin<SUI>,
         ctx: &mut TxContext
     ) {
-        let now = clock::timestamp_ms(ctx) / 1000;
+        let now = clock::timestamp_ms(clock) / 1000;
         let sender = tx_context::sender(ctx);
+        
+        // Take the payment (in a real app, you'd verify the amount)
+        let _payment = payment; // Use the payment to prevent unused variable warning
         
         assert!(!is_in_grace_period(profile, now), 0);
         
-        let days_since_grace_end = (now - profile.grace_period_end) / SECONDS_PER_DAY;
         let last_claim = if (profile.updated_at < profile.grace_period_end) {
             profile.grace_period_end
         } else {
@@ -180,6 +185,10 @@ module wer2::user_profile {
             user_address: sender,
             amount: reward,
             period_end: now,
+            reason: b"weekly_performance_reward"
         });
+        
+        // Burn the payment
+        transfer::public_transfer(payment, @0x0);
     }
 }
