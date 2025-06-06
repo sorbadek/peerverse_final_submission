@@ -600,7 +600,7 @@ const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: 
         containerRef.current = null;
       }
     };
-  }, [scriptLoaded, roomName, isHost, currentAddress, walletAddress, getDisplayName, onClose, setupEventHandlers]);
+  }, [scriptLoaded, roomName, isHost, currentAddress, walletAddress, getDisplayName, onClose, setupEventHandlers, authToken, user?.email]);
 
   // Load Jitsi script
   useEffect(() => {

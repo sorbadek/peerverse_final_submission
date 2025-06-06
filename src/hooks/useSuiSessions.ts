@@ -6,10 +6,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { SuiClient } from '@mysten/sui/client';
 import { useZkLogin } from '../contexts/ZkLoginContext';
 
-const SESSION_PACKAGE_ID = "0x3126d451831200a73bd29fb45608867123d6ed0c6b1032c958a187b9385a163c"
-;
-const SESSION_STORE_OBJECT_ID = "0xda8d0ff61cbd2867daf68520bedfe24d65bff05c8e11bf098ab207b7ac98f2bb"
-;
+const SESSION_PACKAGE_ID = "0x3126d451831200a73bd29fb45608867123d6ed0c6b1032c958a187b9385a163c";
+const SESSION_STORE_OBJECT_ID = "0xda8d0ff61cbd2867daf68520bedfe24d65bff05c8e11bf098ab207b7ac98f2bb";
 
 export interface SessionData {
   title: string;
