@@ -539,10 +539,6 @@ const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: 
             DISABLE_VIDEO_QUALITY_LABEL: true,
             MOBILE_APP_PROMO: false,
             SETTINGS_SECTIONS: ['devices', 'language', 'moderator', 'profile', 'calendar']
-          },
-          userInfo: {
-            displayName,
-            email: ''
           }
         };
 
@@ -604,7 +600,7 @@ const JitsiMeet = ({ roomName, onClose, isHost = false, displayName = 'User' }: 
         containerRef.current = null;
       }
     };
-  }, [scriptLoaded, roomName, isHost, currentAddress, walletAddress, getDisplayName, onClose, setupEventHandlers]);
+  }, [scriptLoaded, roomName, isHost, currentAddress, walletAddress, getDisplayName, onClose, setupEventHandlers, authToken, user?.email]);
 
   // Load Jitsi script
   useEffect(() => {
