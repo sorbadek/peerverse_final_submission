@@ -24,7 +24,8 @@ PeerVerse is a decentralized educational platform built on the Sui blockchain th
 
 ## Smart Contract Structure
 
-The main smart contract (`auth.move`) contains the following key components:
+### Main Contract (auth.move)
+The main smart contract contains the following key components:
 
 - User Profile Management
 - Authentication System
@@ -32,6 +33,14 @@ The main smart contract (`auth.move`) contains the following key components:
 - Class Attendance Tracking
 - Trial Period Evaluation
 - Reputation System
+
+### Active Frontend Integration (wer_session.move)
+The `wer_session.move` contract is currently the only actively integrated module with the frontend. It handles:
+- Creation of live learning sessions
+- Storage of session data on the Sui blockchain
+- Management of session participants and interactions
+
+All session data is stored immutably on the Sui blockchain, ensuring transparency and verifiability of all learning sessions.
 
 ## Getting Started
 
@@ -45,12 +54,12 @@ The main smart contract (`auth.move`) contains the following key components:
 
 1. Clone the repository:
 ```bash
-git clone [repository-url]
+git clone https://github.com/sorbadek/peerverse_final_submission.git
 ```
 
 2. Navigate to the project directory:
 ```bash
-cd PeerVerse
+cd wer_contract
 ```
 
 3. Build the project:
@@ -110,7 +119,7 @@ The system emits various events for tracking and auditing:
 
 ## License
 
-[Add your license information here]
+MIT
 
 ## Contributing
 
