@@ -1,16 +1,16 @@
 # PeerVerse
 
-A modern, Vite-powered React web application inspired by the Color Echo concept. This project features a modular architecture, fast development workflow, and is optimized for deployment on Vercel.
+A modern, Vite-powered React web application inspired by the Situation and challenges surrounding students in africa and beyond. This project features a modular architecture, fast development workflow, and is optimized for deployment on Netlify.
 
 ## Features
-- ⚡️ Built with [Vite](https://vitejs.dev/) for lightning-fast development and builds
-- ⚛️ Uses [React](https://react.dev/) with SWC for high performance
-- 🎨 Modular component structure in `src/components`
-- 🛠️ TypeScript for type safety
-- 💨 [Tailwind CSS](https://tailwindcss.com/) for rapid UI development
-- 🔒 Protected routes and authentication context
-- 📈 Analytics, notifications, and social features
-- 🚀 Ready for deployment on Vercel
+- Built with [Vite](https://vitejs.dev/) for lightning-fast development and builds
+- Uses [React](https://react.dev/) with SWC for high performance
+- Modular component structure in `src/components`
+- TypeScript for type safety
+- [Tailwind CSS](https://tailwindcss.com/) for rapid UI development
+- Protected routes and authentication context
+- Analytics, notifications, and social features
+- Ready for deployment on Netlify
 
 ## Getting Started
 
@@ -44,7 +44,7 @@ npm run dev
 # or
 yarn dev
 ```
-The app will be available at [http://localhost:8080](http://localhost:8080).
+The app will be available at [http://localhost:5173](http://localhost:5173).
 
 ### Build
 
@@ -60,7 +60,7 @@ The output will be in the `dist/` directory, ready for deployment.
 
 ### Deployment
 
-This project is configured for seamless deployment on [Vercel](https://vercel.com/). The `vercel.json` and Vite config ensure correct routing and static file serving.
+This project is configured for seamless deployment on [Netlify](https://peerverses.netlify.com/). The `netlify.toml` and Vite config ensure correct routing and static file serving.
 
 ## Project Structure
 
