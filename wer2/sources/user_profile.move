@@ -2,12 +2,13 @@
 module wer2::user_profile {
     use sui::object::{Self, UID};
     use sui::tx_context::{Self, TxContext};
-    use std::string::String;
+    use std::string::{Self, String};
     use sui::transfer;
     use sui::event;
     use sui::clock::{Self, Clock};
     use sui::sui::SUI;
-    use sui::coin::Coin;
+    use sui::coin::{Self, Coin};
+    use std::option::{Self};
 
     // ===== Constants =====
     const GRACE_PERIOD_DAYS: u64 = 7;
@@ -52,7 +53,6 @@ module wer2::user_profile {
     public struct PerformanceXPAwarded has copy, drop {
         user_address: address,
         amount: u64,
-        period_end: u64,
         reason: String
     }
 
@@ -145,47 +145,39 @@ module wer2::user_profile {
 
     public entry fun award_performance_xp(
         profile: &mut UserProfile,
-        clock: &Clock,
+        amount: u64,
         payment: Coin<SUI>,
+        clock: &Clock,
         ctx: &mut TxContext
     ) {
         let now = clock::timestamp_ms(clock) / 1000;
         let sender = tx_context::sender(ctx);
         
         // Take the payment (in a real app, you'd verify the amount)
-        let _payment = payment; // Use the payment to prevent unused variable warning
+        let _payment_value = coin::value(&payment);
+        coin::destroy_zero(payment);
         
-        assert!(!is_in_grace_period(profile, now), 0);
-        
-        let last_claim = if (profile.updated_at < profile.grace_period_end) {
-            profile.grace_period_end
-        } else {
-            profile.updated_at
-        };
-        
-        let days_since_last_claim = (now - last_claim) / SECONDS_PER_DAY;
-        assert!(days_since_last_claim >= 7, 1);
-        
-        let reward = calculate_performance_reward(profile);
-        
-        profile.xp_balance = profile.xp_balance + reward;
-        profile.total_xp_earned = profile.total_xp_earned + reward;
+        // Update profile with new XP
+        profile.xp_balance = profile.xp_balance + amount;
+        profile.total_xp_earned = profile.total_xp_earned + amount;
         profile.updated_at = now;
         
+        // Update performance metrics
         profile.performance_metrics = PerformanceMetrics {
-            sessions_taught: 0,
-            sessions_attended: 0,
-            content_created: 0,
-            content_consumed: 0,
+            sessions_taught: profile.performance_metrics.sessions_taught,
+            sessions_attended: profile.performance_metrics.sessions_attended + 1,
+            content_created: profile.performance_metrics.content_created,
+            content_consumed: profile.performance_metrics.content_consumed + 1,
             average_rating: profile.performance_metrics.average_rating,
-            rating_count: 0,
+            rating_count: profile.performance_metrics.rating_count,
         };
         
+        // Emit event with proper string type
+        let reason = string::utf8(b"weekly_performance_reward");
         event::emit(PerformanceXPAwarded {
             user_address: sender,
-            amount: reward,
-            period_end: now,
-            reason: b"weekly_performance_reward"
+            amount: amount,
+            reason: reason
         });
         
         // Burn the payment

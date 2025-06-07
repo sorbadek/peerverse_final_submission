@@ -4,6 +4,7 @@ module wer2::content {
     use sui::tx_context::{Self, TxContext};
     use sui::object::{Self, UID, ID};
     use std::string::String;
+    use std::option::{Self, Option};
     use sui::transfer;
     use sui::event;
     use sui::clock::{Self, Clock};
@@ -49,7 +50,7 @@ module wer2::content {
     }
 
     public entry fun create_content(
-        creator: &signer,
+        _creator: &signer,
         title: String,
         description: String,
         content_type: u8,
@@ -102,33 +103,43 @@ module wer2::content {
     }
 
 
+    // Helper function to check if a user can access content
+    fun check_access(
+        content: &Content,
+        sender_addr: address,
+        payment: &mut Option<u64>
+    ) {
+        // Public content is always accessible
+        if (content.visibility == VISIBILITY_PUBLIC) {
+            return ()
+        };
+        
+        // Check private content access
+        if (content.visibility == VISIBILITY_PRIVATE) {
+            assert!(content.creator == sender_addr, E_UNAUTHORIZED);
+            return ()
+        };
+        
+        // Check paid content access
+        if (content.visibility == VISIBILITY_PAID) {
+            assert!(option::is_some(payment), E_INSUFFICIENT_XP);
+            let payment_amount = option::extract(payment);
+            assert!(payment_amount >= content.price_xp, E_INSUFFICIENT_XP);
+        };
+    }
+
     public entry fun access_content(
-        sender: &signer,
+        _sender: &signer,
         content: &mut Content,
         clock: &Clock,
-        payment: Option<u64>,
+        mut payment: Option<u64>,
         ctx: &mut TxContext
     ) {
         let now = clock::timestamp_ms(clock) / 1000; // Convert to seconds
         let sender_addr = tx_context::sender(ctx);
         
-        // Process payment if required
-        if (option::is_some(&payment)) {
-            let amount = option::extract(&mut payment);
-            // In a real implementation, you would verify the payment here
-            // For now, we just ensure the payment meets the content's price
-            assert!(amount >= content.price_xp, E_INSUFFICIENT_XP);
-        }
-        
-        if (content.visibility == VISIBILITY_PRIVATE && content.creator != sender_addr) {
-            // Only the creator can access private content
-            assert!(false, E_UNAUTHORIZED);
-        } else if (content.visibility == VISIBILITY_PAID) {
-            // For paid content, check if user has enough XP
-            // This is a placeholder - actual XP check will be implemented
-            // when XP module is ready
-            assert!(false, E_INSUFFICIENT_XP);
-        };
+        // Check access permissions
+        check_access(content, sender_addr, &mut payment);
         
         // Update last accessed timestamp
         content.updated_at = now;
@@ -136,7 +147,7 @@ module wer2::content {
 
 
     public entry fun update_content(
-        sender: &signer,
+        _sender: &signer,
         content: &mut Content,
         new_title: String,
         new_description: String,
