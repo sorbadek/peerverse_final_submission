@@ -218,7 +218,7 @@ This project is configured for seamless deployment on [Netlify](https://peervers
 ## Project Structure
 
 ```
-color-echo-clone-10/
+Peerverse/
 ├── public/           # Static assets
 ├── src/              # Source code
 │   ├── components/   # React components
