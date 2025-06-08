@@ -11,7 +11,7 @@ A modern, Vite-powered React web application with Sui blockchain integration, de
 - 🔄 State management with React Query
 - 📝 Form handling with React Hook Form
 - 🎭 Theming support
-- 🔒 Wallet authentication
+- 🔒 ZKLOGIN authentication
 - 📊 Data visualization with Recharts
 - 🎤 Video conferencing with Jitsi Meet
 
