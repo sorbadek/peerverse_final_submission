@@ -2,20 +2,20 @@
 
 A modern, Vite-powered React web application with Sui blockchain integration, designed to address challenges faced by students in Africa and beyond. This project features a modular architecture, fast development workflow, and is optimized for deployment on Netlify.
 
-## 🚀 Features
-- ⚡ Built with [Vite](https://vitejs.dev/) for lightning-fast development
-- ⚛️ [React](https://react.dev/) with SWC for high performance
-- 🔗 Sui blockchain integration
-- 🎨 Modern UI with Radix UI components and Tailwind CSS
-- 🛠 TypeScript for type safety
-- 🔄 State management with React Query
-- 📝 Form handling with React Hook Form
-- 🎭 Theming support
-- 🔒 ZKLOGIN authentication
-- 📊 Data visualization with Recharts
-- 🎤 Video conferencing with Jitsi Meet
+##  Features
+-  Built with [Vite](https://vitejs.dev/) for lightning-fast development
+-  [React](https://react.dev/) with SWC for high performance
+-  Sui blockchain integration
+-  Modern UI with Radix UI components and Tailwind CSS
+-  TypeScript for type safety
+-  State management with React Query
+-  Form handling with React Hook Form
+-  Theming support
+-  ZKLOGIN authentication
+-  Data visualization with Recharts
+-  Video conferencing with Jitsi Meet
 
-## 📦 Dependencies
+##  Dependencies
 
 ### Core
 - `react` (^18.3.1) & `react-dom` (^18.3.1) - React library
