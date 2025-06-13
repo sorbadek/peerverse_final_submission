@@ -4,65 +4,44 @@ import {
   useSignAndExecuteTransaction, 
   useCurrentAccount, 
   useConnectWallet, 
-  useWallets, 
-  useSignPersonalMessage 
+  useWallets,
 } from '@mysten/dapp-kit';
+import { useQueryClient, useMutation, useQuery } from '@tanstack/react-query';
 import { isEnokiWallet } from '@mysten/enoki';
 import { Transaction } from '@mysten/sui/transactions';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { SuiClient } from '@mysten/sui/client';
+import type { SuiClient, SuiTransactionBlockResponse, MoveStruct, SuiObjectRef } from '@mysten/sui/client';
+import { toB64 } from '@mysten/sui/utils';
+import { bcs } from '@mysten/bcs';
 import { useZkLogin } from '../contexts/ZkLoginContext';
 
-// Constants
-const SESSION_PACKAGE_ID = "0x3126d451831200a73bd29fb45608867123d6ed0c6b1032c958a187b9385a163c";
-const SESSION_STORE_OBJECT_ID = "0xda8d0ff61cbd2867daf68520bedfe24d65bff05c8e11bf098ab207b7ac98f2bb";
+// Get contract addresses from environment variables
+const SESSION_PACKAGE_ID = import.meta.env.VITE_SESSION_PACKAGE_ID;
+const SESSION_STORE_OBJECT_ID = import.meta.env.VITE_SESSION_STORE_OBJECT_ID;
 
-// Type definitions for transaction handling
-interface CreatedObject {
-  owner?: {
-    AddressOwner?: string;
-  };
-  reference?: {
-    objectId: string;
-  };
+if (!SESSION_PACKAGE_ID || !SESSION_STORE_OBJECT_ID) {
+  console.warn('Session package ID or store object ID is not set in environment variables');
 }
 
-interface TransactionEffects {
-  created?: CreatedObject[];
-}
+// Helper function to find the session store object ID if not known
+async function findSessionStoreId(suiClient: SuiClient, owner: string): Promise<string | null> {
+  try {
+    const objects = await suiClient.getOwnedObjects({
+      owner,
+      filter: {
+        StructType: `${SESSION_PACKAGE_ID}::session_manager::SessionStore`
+      },
+      options: { showType: true }
+    });
 
-interface TransactionResult {
-  effects: TransactionEffects | string;
-  digest: string;
-}
-
-interface SessionStoreFields {
-  sessions?: Array<{
-    fields: {
-      id: { id: string };
-      owner: string;
-      title: string;
-      description: string;
-      category: string;
-      duration: string;
-      room_name: string;
-      created_at: string;
-    };
-  }>;
+    return objects.data[0]?.data?.objectId || null;
+  } catch (error) {
+    console.error('Error finding session store:', error);
+    return null;
+  }
 }
 
 export interface SessionData {
-  title: string;
-  description: string;
-  category: string;
-  duration: string;
-  roomName: string;
-  createdAt: string;
-  owner?: string;
-}
-
-export interface SessionFields {
-  id: { id: string };
+  id: string;
   owner: string;
   title: string;
   description: string;
@@ -72,16 +51,11 @@ export interface SessionFields {
   created_at: string;
 }
 
-export interface SuiSession extends Omit<SessionFields, 'id'> {
-  id: string;
-}
-
 export function useSuiSessions() {
   const suiClient = useSuiClient();
-  const { isAuthenticated, currentAddress } = useZkLogin();
+  const { currentAddress } = useZkLogin();
   const currentAccount = useCurrentAccount();
   const { mutate: connect } = useConnectWallet();
-  const { mutateAsync: signPersonalMessage } = useSignPersonalMessage();
   const { mutateAsync: signAndExecuteTransaction } = useSignAndExecuteTransaction();
   const queryClient = useQueryClient();
   const wallets = useWallets();
@@ -118,45 +92,52 @@ export function useSuiSessions() {
   const walletAddress = currentAddress || currentAccount?.address || storedConnectionInfo?.address;
 
   // Fetch all sessions
-  const { data: suiSessions = [], isLoading, error, refetch } = useQuery<SuiSession[]>({
+  const { data: suiSessions = [], isLoading, error, refetch } = useQuery<SessionData[]>({
     queryKey: ['suiSessions', walletAddress],
-    enabled: !!walletAddress,
+    enabled: !!walletAddress && !!SESSION_PACKAGE_ID,
     queryFn: async () => {
-      if (!suiClient || !walletAddress) return [];
+      if (!suiClient || !walletAddress || !SESSION_PACKAGE_ID) return [];
       
       try {
+        // Try to find the session store if we don't have the ID
+        let sessionStoreId = SESSION_STORE_OBJECT_ID;
+        if (sessionStoreId === 'SESSION_STORE_OBJECT_ID') {
+          const foundId = await findSessionStoreId(suiClient, walletAddress);
+          if (!foundId) return [];
+          sessionStoreId = foundId;
+        }
+
+        // Get the session store
         const sessionStore = await suiClient.getObject({
-          id: SESSION_STORE_OBJECT_ID,
+          id: sessionStoreId,
           options: { showContent: true },
         });
 
         if (!sessionStore.data?.content || sessionStore.data.content.dataType !== 'moveObject') {
-          throw new Error('Invalid session store object');
+          console.warn('Invalid session store object');
+          return [];
         }
 
-        // Type assertion for the session store fields
-        type SessionStoreFields = {
+        // Type the session store content
+        const content = sessionStore.data.content;
+        if (content?.dataType !== 'moveObject') {
+          console.warn('Expected moveObject data type');
+          return [];
+        }
+        
+        // Safely cast the fields to the expected shape
+        const fields = content.fields as {
+          id: { id: string };
           sessions?: Array<{
-            fields: {
-              id: { id: string };
-              owner: string;
-              title: string;
-              description: string;
-              category: string;
-              duration: string;
-              room_name: string;
-              created_at: string;
-            };
+            fields: SessionData & { id: { id: string } };
           }>;
         };
-
-        const storeFields = sessionStore.data.content.fields as unknown as SessionStoreFields;
         
-        if (!storeFields.sessions) return [];
+        if (!fields.sessions) return [];
 
         // Map the sessions to the expected format
-        return storeFields.sessions.map(session => ({
-          id: session.fields.id.id,
+        return fields.sessions.map((session) => ({
+          id: session.fields.id,
           owner: session.fields.owner,
           title: session.fields.title,
           description: session.fields.description,
@@ -167,7 +148,7 @@ export function useSuiSessions() {
         }));
       } catch (error) {
         console.error('Error fetching sessions:', error);
-        throw error;
+        return [];
       }
     },
     refetchOnWindowFocus: false,
@@ -175,9 +156,7 @@ export function useSuiSessions() {
 
   // Create a new session
   const createSession = useMutation({
-    mutationFn: async (sessionData: SessionData): Promise<{ sessionId: string }> => {
-      console.log('Creating session with data:', sessionData);
-  
+    mutationFn: async (sessionData: Omit<SessionData, 'id' | 'owner'>): Promise<{ sessionId: string }> => {
       if (!walletAddress || !currentAccount) {
         throw new Error('Please connect your wallet first');
       }
@@ -187,168 +166,107 @@ export function useSuiSessions() {
         throw new Error('Title is required');
       }
 
-      // First, try to find an existing session store owned by the user
-      let sessionStoreId = SESSION_STORE_OBJECT_ID; // Fallback to the default ID
+      // Try to find an existing session store or create one
+      let sessionStoreId = SESSION_STORE_OBJECT_ID;
       
-      try {
-        // Look for session stores owned by the current user
-        const ownedObjects = await suiClient.getOwnedObjects({
-          owner: walletAddress,
-          filter: {
-            StructType: `${SESSION_PACKAGE_ID}::session_manager::SessionStore`
-          },
-          options: { showContent: true }
-        });
-
-        if (ownedObjects.data.length > 0) {
-          // Use the first session store found
-          sessionStoreId = ownedObjects.data[0].data?.objectId || SESSION_STORE_OBJECT_ID;
-          console.log('Using existing session store:', sessionStoreId);
-        } else {
+      // If we don't have a session store ID, try to find one
+      if (sessionStoreId === 'SESSION_STORE_OBJECT_ID') {
+        const foundId = await findSessionStoreId(suiClient, walletAddress);
+        if (!foundId) {
           // Create a new session store if none exists
-          console.log('No existing session store found, creating a new one');
-          const createStoreTx = new Transaction();
-          createStoreTx.moveCall({
+          const tx = new Transaction();
+          tx.moveCall({
             target: `${SESSION_PACKAGE_ID}::session_manager::create_session_store`,
             arguments: [],
           });
-          createStoreTx.setGasBudget(10_000_000);
-          
-          interface CreatedObject {
-            owner?: {
-              AddressOwner?: string;
-            };
-            reference?: {
-              objectId: string;
-            };
-          }
-
-          interface TransactionEffects {
-            created?: CreatedObject[];
-          }
-
-          interface TransactionResult {
-            effects: TransactionEffects | string;
-            digest: string;
-          }
-
-          const createStoreResult = await signAndExecuteTransaction({
-            transaction: createStoreTx,
+          const result = await signAndExecuteTransaction({
+            transaction: tx,
             chain: 'sui:devnet',
-            account: currentAccount,
-          }) as unknown as TransactionResult;
+          });
           
-          console.log('Create store result:', createStoreResult);
-          
-          // Handle base64-encoded effects
-          let effects: TransactionEffects = {};
-          if (typeof createStoreResult.effects === 'string') {
-            try {
-              // First try to decode as base64
-              const decoded = atob(createStoreResult.effects);
-              // Then try to parse as JSON if it looks like JSON
-              if (decoded.trim().startsWith('{')) {
-                effects = JSON.parse(decoded) as TransactionEffects;
-              }
-            } catch (e) {
-              console.warn('Could not parse effects as JSON, using empty object');
-            }
-          } else {
-            effects = createStoreResult.effects as TransactionEffects;
-          }
-            
-          if (effects?.created) {
-            const createdObject = effects.created.find(
-              (obj: CreatedObject) => obj.owner?.AddressOwner === walletAddress
-            );
-            if (createdObject?.reference?.objectId) {
-              sessionStoreId = createdObject.reference.objectId;
-              console.log('Found new session store ID:', sessionStoreId);
-            }
+          // If you need effects and events, you can fetch them separately
+          if (result.digest) {
+            const txDetails = await suiClient.getTransactionBlock({
+              digest: result.digest,
+              options: {
+                showEffects: true,
+                showEvents: true,
+              },
+            });
+            console.log('Transaction details:', txDetails);
           }
           
-          if (!sessionStoreId) {
-            throw new Error('Failed to get the created session store ID');
-          }
-        }
-
-        // Now create the session using the found or created session store
-        const txb = new Transaction();
-        
-        const [session] = txb.moveCall({
-          target: `${SESSION_PACKAGE_ID}::session_manager::create_session`,
-          arguments: [
-            txb.object(sessionStoreId),
-            txb.pure.address(walletAddress),
-            txb.pure.string(sessionData.title),
-            txb.pure.string(sessionData.description || ''),
-            txb.pure.string(sessionData.category || ''),
-            txb.pure.string(sessionData.duration || ''),
-            txb.pure.string(sessionData.roomName || ''),
-            txb.pure.string(sessionData.createdAt || new Date().toISOString()),
-          ],
-        });
-        
-        txb.transferObjects([session], txb.pure.address(walletAddress));
-        txb.setGasBudget(10_000_000);
-        
-        console.log('Submitting session creation transaction with signer:', walletAddress);
-        const result = await signAndExecuteTransaction({
-          transaction: txb,
-          chain: 'sui:devnet',
-          account: currentAccount,
-        });
-        
-        // Refetch sessions after successful transaction
-        await queryClient.invalidateQueries({ queryKey: ['suiSessions'] });
-        
-        // Extract the created session ID from the transaction result
-        let sessionId: string | undefined;
-        
-        // Handle base64-encoded effects for session creation
-        let resultEffects: TransactionEffects = {};
-        if (typeof result.effects === 'string') {
-          try {
-            // First try to decode as base64
-            const decoded = atob(result.effects);
-            // Then try to parse as JSON if it looks like JSON
-            if (decoded.trim().startsWith('{')) {
-              resultEffects = JSON.parse(decoded) as TransactionEffects;
-            }
-          } catch (e) {
-            console.warn('Could not parse effects as JSON, using empty object');
-          }
-        } else {
-          resultEffects = result.effects as TransactionEffects;
-        }
+          // Find the created session store ID
+          const effects = result.effects as {
+            created?: Array<{
+              owner?: { AddressOwner?: string };
+              reference?: { objectId: string };
+            }>;
+          };
           
-        if (resultEffects?.created) {
-          // Find the created session object
-          const createdSession = resultEffects.created.find(
-            (obj: CreatedObject) => obj.owner?.AddressOwner === walletAddress
+          const createdObject = effects.created?.find(
+            (obj) => obj.owner?.AddressOwner === walletAddress
           );
           
-          if (createdSession?.reference?.objectId) {
-            sessionId = createdSession.reference.objectId;
+          if (!createdObject?.reference?.objectId) {
+            throw new Error('Failed to create session store: No object ID returned');
           }
+          
+          sessionStoreId = createdObject.reference.objectId;
+        } else {
+          sessionStoreId = foundId;
         }
-        
-        // Fallback to using the transaction digest if we couldn't find the object ID
-        if (!sessionId) {
-          console.warn('Could not find created session ID in transaction result, using transaction digest instead');
-          sessionId = result.digest;
-        }
-        
-        console.log('Created session with ID:', sessionId);
-        return { sessionId };
-        
-      } catch (error) {
-        console.error('Error creating session:', error);
-        throw new Error('Failed to create session: ' + (error as Error).message);
       }
+
+      // Create the session
+      const tx = new Transaction();
+      
+      // Helper function to create string arguments
+      const makeStringArg = (value: string) => {
+        // Use bcs to serialize the string
+        const ser = bcs.ser('string', value).toBytes();
+        return tx.pure(ser);
+      };
+
+      // Create the move call
+      tx.moveCall({
+        target: `${SESSION_PACKAGE_ID}::session_manager::create_session_entry`,
+        arguments: [
+          tx.object(sessionStoreId),
+          makeStringArg(sessionData.title),
+          makeStringArg(sessionData.description || ''),
+          makeStringArg(sessionData.category || ''),
+          makeStringArg(sessionData.duration || ''),
+          makeStringArg(sessionData.room_name || ''),
+          makeStringArg(new Date().toISOString()),
+        ],
+      });
+
+      const result = await signAndExecuteTransaction({
+        transaction: tx,
+        chain: 'sui:devnet'
+      });
+      
+      // Get transaction details separately if needed
+      if (result.digest) {
+        const txDetails = await suiClient.getTransactionBlock({
+          digest: result.digest,
+          options: {
+            showEffects: true,
+            showEvents: true,
+          },
+        });
+        console.log('Transaction details:', txDetails);
+      }
+
+      // Invalidate and refetch
+      await queryClient.invalidateQueries({ queryKey: ['suiSessions'] });
+      
+      return { sessionId: result.digest };
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['suiSessions'] });
+    onError: (error) => {
+      console.error('Error creating session:', error);
+      throw error;
     },
   });
 
@@ -356,11 +274,9 @@ export function useSuiSessions() {
     sessions: suiSessions,
     isLoading,
     error,
-    createSession: createSession.mutateAsync,
     refetch,
-    isConnected: !!currentAccount || !!currentAddress,
-    walletAddress: walletAddress || '',
-    wallet: currentAccount,
-    signMessage: signPersonalMessage,
+    createSession: createSession.mutateAsync,
+    walletAddress,
+    isConnected: !!walletAddress,
   };
 }
