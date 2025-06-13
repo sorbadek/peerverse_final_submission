@@ -2,20 +2,20 @@
 
 A modern, Vite-powered React web application with Sui blockchain integration, designed to address challenges faced by students in Africa and beyond. This project features a modular architecture, fast development workflow, and is optimized for deployment on Netlify.
 
-## 🚀 Features
-- ⚡ Built with [Vite](https://vitejs.dev/) for lightning-fast development
-- ⚛️ [React](https://react.dev/) with SWC for high performance
-- 🔗 Sui blockchain integration
-- 🎨 Modern UI with Radix UI components and Tailwind CSS
-- 🛠 TypeScript for type safety
-- 🔄 State management with React Query
-- 📝 Form handling with React Hook Form
-- 🎭 Theming support
-- 🔒 Wallet authentication
-- 📊 Data visualization with Recharts
-- 🎤 Video conferencing with Jitsi Meet
+##  Features
+-  Built with [Vite](https://vitejs.dev/) for lightning-fast development
+-  [React](https://react.dev/) with SWC for high performance
+-  Sui blockchain integration
+-  Modern UI with Radix UI components and Tailwind CSS
+-  TypeScript for type safety
+-  State management with React Query
+-  Form handling with React Hook Form
+-  Theming support
+-  ZKLOGIN authentication
+-  Data visualization with Recharts
+-  Video conferencing with Jitsi Meet
 
-## 📦 Dependencies
+##  Dependencies
 
 ### Core
 - `react` (^18.3.1) & `react-dom` (^18.3.1) - React library
@@ -40,7 +40,7 @@ A modern, Vite-powered React web application with Sui blockchain integration, de
 - `react-hook-form` (^7.53.0) - Forms
 - `jwt-decode` (^4.0.0) - Token handling
 
-## 🛠 Installation
+##  Installation
 
 1. **Clone the repository**
    ```bash
@@ -73,7 +73,7 @@ A modern, Vite-powered React web application with Sui blockchain integration, de
    npm install @mysten/sui.js@0.20.0 @mysten/wallet-adapter-react@11.0.0 --legacy-peer-deps
    ```
 
-## 🔧 Troubleshooting
+##  Troubleshooting
 
 ### Dependency Conflicts
 If you see errors about conflicting peer dependencies, try these steps:
@@ -114,7 +114,7 @@ If you see errors about conflicting peer dependencies, try these steps:
    VITE_API_URL=your_api_url_here
    ```
 
-## 🚀 Development
+##  Development
 
 1. **Start the development server**
    ```bash
@@ -132,7 +132,7 @@ If you see errors about conflicting peer dependencies, try these steps:
    ```
    The production build will be in the `dist/` directory
 
-## 🌐 Deployment
+##  Deployment
 
 ### Netlify
 1. Install Netlify CLI:
@@ -145,14 +145,14 @@ If you see errors about conflicting peer dependencies, try these steps:
    netlify deploy --prod
    ```
 
-## 📚 Documentation
+##  Documentation
 
 - [Vite Documentation](https://vitejs.dev/guide/)
 - [React Documentation](https://react.dev/learn)
 - [Sui Documentation](https://docs.sui.io/)
 - [Tailwind CSS](https://tailwindcss.com/docs)
 
-## 🤝 Contributing
+##  Contributing
 
 1. Fork the repository
 2. Create your feature branch (`git checkout -b feature/amazing-feature`)
@@ -160,7 +160,7 @@ If you see errors about conflicting peer dependencies, try these steps:
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 📄 License
+##  License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 - Ready for deployment on Netlify
@@ -218,7 +218,7 @@ This project is configured for seamless deployment on [Netlify](https://peervers
 ## Project Structure
 
 ```
-Peerverse/
+PeerVerse/
 ├── public/           # Static assets
 ├── src/              # Source code
 │   ├── components/   # React components
